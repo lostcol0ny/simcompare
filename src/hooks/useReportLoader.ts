@@ -32,11 +32,12 @@ export function useReportLoader() {
           r.url === url ? { url, state: { status: 'valid', report } } : r
         )
       )
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
       setReports((prev) =>
         prev.map((r) =>
           r.url === url
-            ? { url, state: { status: 'error', message: 'Report not found or expired' } }
+            ? { url, state: { status: 'error', message } }
             : r
         )
       )
