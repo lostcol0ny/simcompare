@@ -53,7 +53,12 @@ const MOCK_RAW: RaidbotsRawData = {
               damage_versatility: 0.0515,
             },
           },
+          timeline_dmg: { data: [] },
+          resource_timelines: {},
         },
+        buffs: [],
+        gains: [],
+        gear: {},
         stats: [
           {
             id: 264178,
@@ -72,6 +77,97 @@ const MOCK_RAW: RaidbotsRawData = {
     ],
   },
 }
+
+const MOCK_RAW_EXTENDED: RaidbotsRawData = {
+  sim: {
+    ...MOCK_RAW.sim,
+    players: [{
+      ...MOCK_RAW.sim.players[0],
+      buffs: [
+        { name: 'demonic_core', spell_name: 'Demonic Core', uptime: 70.8 },
+        { name: 'pet_movement', uptime: 4.5 },
+        { name: 'demonic_power', spell_name: 'Demonic Power', uptime: 100.0 },
+      ],
+      gains: [
+        { name: 'demonbolt', soul_shard: { actual: 190.46, overflow: 0, count: 95.23 } },
+        { name: 'shadow_bolt', soul_shard: { actual: 42.77, overflow: 0, count: 42.77 } },
+        { name: 'Mana Regen', mana: { actual: 634400, overflow: 263410, count: 1064 } },
+      ],
+      gear: {
+        head:      { name: 'abyssal_immolators_smoldering_flames' },
+        chest:     { name: 'abyssal_immolators_dreadrobe' },
+        legs:      { name: 'abyssal_immolators_pillars' },
+        hands:     { name: 'abyssal_immolators_grasps' },
+        neck:      { name: 'eternal_voidsong_chain' },
+        shoulders: { name: 'viceroys_umbral_mantle' },
+      },
+      collected_data: {
+        ...MOCK_RAW.sim.players[0].collected_data,
+        timeline_dmg: { data: [100000, 200000, 150000, 300000, 250000] },
+        resource_timelines: {
+          soul_shard: { data: [4, 3, 3, 2, 5] },
+        },
+      },
+    }],
+  },
+}
+
+describe('parseRaidbotsData — new fields', () => {
+  it('parses buff uptimes, excluding buffs with uptime < 5%', () => {
+    const result = parseRaidbotsData('abc123', MOCK_RAW_EXTENDED)
+    expect(result.buffs).toHaveLength(2)  // pet_movement (4.5%) excluded
+    const names = result.buffs.map(b => b.name)
+    expect(names).toContain('Demonic Core')
+    expect(names).toContain('Demonic Power')
+    const core = result.buffs.find(b => b.name === 'Demonic Core')!
+    expect(core.uptime).toBeCloseTo(70.8)
+  })
+
+  it('parses resource gains, skipping non-object resource values', () => {
+    const result = parseRaidbotsData('abc123', MOCK_RAW_EXTENDED)
+    const shardGains = result.gains.filter(g => g.resource === 'soul_shard')
+    expect(shardGains).toHaveLength(2)
+    const db = shardGains.find(g => g.source === 'demonbolt')!
+    expect(db.actual).toBeCloseTo(190.46)
+    expect(db.overflow).toBe(0)
+    expect(db.count).toBeCloseTo(95.23)
+  })
+
+  it('detects set bonus from gear item name prefixes', () => {
+    const result = parseRaidbotsData('abc123', MOCK_RAW_EXTENDED)
+    expect(result.setBonus).not.toBeNull()
+    expect(result.setBonus!.pieces).toBe(4)
+    expect(result.setBonus!.setName).toBe('Abyssal Immolator')
+  })
+
+  it('returns null setBonus when fewer than 2 matching items', () => {
+    const noSet: RaidbotsRawData = {
+      ...MOCK_RAW_EXTENDED,
+      sim: {
+        ...MOCK_RAW_EXTENDED.sim,
+        players: [{
+          ...MOCK_RAW_EXTENDED.sim.players[0],
+          gear: {
+            head: { name: 'eternal_voidsong_chain' },
+            neck: { name: 'viceroys_umbral_mantle' },
+          },
+        }],
+      },
+    }
+    const result = parseRaidbotsData('abc123', noSet)
+    expect(result.setBonus).toBeNull()
+  })
+
+  it('parses DPS timeline', () => {
+    const result = parseRaidbotsData('abc123', MOCK_RAW_EXTENDED)
+    expect(result.timelineDps).toEqual([100000, 200000, 150000, 300000, 250000])
+  })
+
+  it('parses resource timelines', () => {
+    const result = parseRaidbotsData('abc123', MOCK_RAW_EXTENDED)
+    expect(result.resourceTimelines['soul_shard']).toEqual([4, 3, 3, 2, 5])
+  })
+})
 
 describe('parseRaidbotsData', () => {
   it('extracts character name and spec', () => {

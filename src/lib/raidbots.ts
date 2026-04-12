@@ -1,4 +1,4 @@
-import type { RaidbotsRawData, Report, ParsedAbility } from './types'
+import type { RaidbotsRawData, Report, ParsedAbility, ParsedBuff, ParsedGain, SetBonus } from './types'
 
 const RAIDBOTS_REPORT_PATTERN = /raidbots\.com\/simbot\/report\/([A-Za-z0-9]+)/
 
@@ -23,8 +23,60 @@ function petNameToId(name: string): number {
   for (let i = 0; i < name.length; i++) {
     h = (Math.imul(31, h) + name.charCodeAt(i)) | 0
   }
-  // Always negative so it won't collide with real spell IDs
   return h <= 0 ? h - 1 : -h - 1
+}
+
+/**
+ * Detect tier set from gear item names by grouping on first 2 underscore-segments.
+ * Returns the largest group if it has >= 2 pieces.
+ * e.g. "abyssal_immolators_dreadrobe" -> prefix "abyssal_immolators"
+ */
+function detectSetBonus(gear: Record<string, { name: string }>): SetBonus | null {
+  const prefixCount = new Map<string, number>()
+  for (const item of Object.values(gear)) {
+    const parts = item.name.split('_')
+    if (parts.length < 3) continue  // no unique suffix -> not a set item
+    const prefix = parts.slice(0, 2).join('_')
+    prefixCount.set(prefix, (prefixCount.get(prefix) ?? 0) + 1)
+  }
+  let best: [string, number] | null = null
+  for (const [prefix, count] of prefixCount) {
+    if (count >= 2 && (!best || count > best[1])) best = [prefix, count]
+  }
+  if (!best) return null
+  // Format: "abyssal_immolators" -> "Abyssal Immolator" (drop trailing 's')
+  const setName = best[0]
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+    .replace(/s$/, '')
+  return { setName, pieces: best[1] }
+}
+
+function parseBuff(raw: { name: string; spell_name?: string; uptime: number }): ParsedBuff {
+  const rawName = raw.spell_name || raw.name
+  const name = rawName.charAt(0).toUpperCase() + rawName.slice(1)
+  return { name, uptime: raw.uptime }
+}
+
+function parseGains(rawGains: RaidbotsRawData['sim']['players'][0]['gains']): ParsedGain[] {
+  const result: ParsedGain[] = []
+  for (const gain of rawGains) {
+    for (const [key, val] of Object.entries(gain)) {
+      if (key === 'name') continue
+      if (typeof val !== 'object' || val === null) continue
+      const v = val as { actual: number; overflow: number; count: number }
+      if (v.actual <= 0) continue
+      result.push({
+        source: gain.name as string,
+        resource: key,
+        actual: v.actual,
+        overflow: v.overflow,
+        count: v.count,
+      })
+    }
+  }
+  return result
 }
 
 export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Report {
@@ -38,22 +90,12 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
   const petGroupAbilities: ParsedAbility[] = player.stats_pets
     ? Object.entries(player.stats_pets)
         .map(([petKey, petStats]) => {
-          // Flatten the (potentially nested) pet actor tree to leaf abilities
-          // that have actual DPS, then merge duplicates by spell name. This handles
-          // both real pets (Felguard has Felstorm + Legion Strike + Melee) and
-          // ability-based actors (Implosion imps all cast "Implosion").
           const rawChildren = parseAbilities(petStats, totalDps)
           const leaves = collectLeaves(rawChildren)
           if (leaves.length === 0) return null
-
           const merged = mergeLeavesByName(leaves, totalDps)
           const petDps = merged.reduce((sum, a) => sum + a.dps, 0)
-
-          if (merged.length === 1) {
-            // Single ability → promote to player level, no expand arrow
-            return merged[0] satisfies ParsedAbility
-          }
-
+          if (merged.length === 1) return merged[0] satisfies ParsedAbility
           return {
             id: petNameToId(petKey),
             spellName: formatPetName(petKey),
@@ -69,7 +111,6 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
 
   const abilities = [...playerAbilities, ...petGroupAbilities].sort((a, b) => b.dps - a.dps)
 
-  // buffed_stats nests the computed stats under a `stats` sub-object
   const bs = cd.buffed_stats as {
     attribute?: { intellect?: number }
     stats?: {
@@ -80,6 +121,22 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
       damage_versatility?: number
     }
   }
+
+  const MIN_UPTIME = 5  // % — filter out transient/irrelevant buffs
+  const buffs: ParsedBuff[] = (player.buffs ?? [])
+    .filter((b) => b.uptime >= MIN_UPTIME)
+    .map(parseBuff)
+    .sort((a, b) => b.uptime - a.uptime)
+
+  const gains: ParsedGain[] = parseGains(player.gains ?? [])
+
+  const timelineDps: number[] = cd.timeline_dmg?.data ?? []
+  const resourceTimelines: Record<string, number[]> = {}
+  for (const [resource, tl] of Object.entries(cd.resource_timelines ?? {})) {
+    resourceTimelines[resource] = tl.data
+  }
+
+  const setBonus = detectSetBonus(player.gear ?? {})
 
   return {
     id: reportId,
@@ -102,6 +159,11 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
       mastery: (bs.stats?.mastery_value ?? 0) * 100,
       versatility: (bs.stats?.damage_versatility ?? 0) * 100,
     },
+    setBonus,
+    buffs,
+    gains,
+    timelineDps,
+    resourceTimelines,
   }
 }
 
@@ -109,11 +171,8 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
 function collectLeaves(abilities: ParsedAbility[]): ParsedAbility[] {
   const result: ParsedAbility[] = []
   for (const a of abilities) {
-    if (a.dps > 0) {
-      result.push(a)
-    } else if (a.children.length > 0) {
-      result.push(...collectLeaves(a.children))
-    }
+    if (a.dps > 0) result.push(a)
+    else if (a.children.length > 0) result.push(...collectLeaves(a.children))
   }
   return result
 }
@@ -154,15 +213,11 @@ function parseAbilities(
     const spellName = rawName.charAt(0).toUpperCase() + rawName.slice(1)
     if (!spellName) continue
 
-    // When a parent has dps:0 but has children with DPS, promote the sum to the
-    // parent so it sorts and displays correctly rather than showing — at the bottom.
     let flatChildren = children
     if (dps === 0 && children.length > 0) {
       const childSum = children.reduce((sum, c) => sum + c.dps, 0)
       if (childSum > 0) {
         dps = childSum
-        // If all children share the parent's name (SimC compound ability pattern),
-        // strip them — the parent is just one flat ability like Hand of Gul'dan.
         if (children.every((c) => c.spellName === spellName)) {
           flatChildren = []
         }
