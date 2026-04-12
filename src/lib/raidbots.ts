@@ -20,9 +20,21 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
   const cd = player.collected_data
 
   const totalDps = cd.dps.mean
-  const allStats = [...player.stats, ...player.stats_pets]
+  const allStats = [...(player.stats ?? []), ...(player.stats_pets ?? [])]
 
   const abilities = parseAbilities(allStats, totalDps)
+
+  // buffed_stats nests the computed stats under a `stats` sub-object
+  const bs = cd.buffed_stats as {
+    attribute?: { intellect?: number }
+    stats?: {
+      spell_power?: number
+      spell_crit?: number
+      spell_haste?: number
+      mastery_value?: number
+      damage_versatility?: number
+    }
+  }
 
   return {
     id: reportId,
@@ -38,12 +50,12 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
     varyLength: opts.vary_combat_length,
     abilities,
     buffedStats: {
-      intellect: cd.buffed_stats.attribute.Intellect,
-      spellPower: cd.buffed_stats.spell_power,
-      spellCrit: cd.buffed_stats.spell_crit,
-      spellHaste: cd.buffed_stats.spell_haste,
-      mastery: cd.buffed_stats.mastery_value,
-      versatility: cd.buffed_stats.damage_versatility,
+      intellect: bs.attribute?.intellect ?? 0,
+      spellPower: bs.stats?.spell_power ?? 0,
+      spellCrit: (bs.stats?.spell_crit ?? 0) * 100,
+      spellHaste: (bs.stats?.spell_haste ?? 0) * 100,
+      mastery: (bs.stats?.mastery_value ?? 0) * 100,
+      versatility: (bs.stats?.damage_versatility ?? 0) * 100,
     },
   }
 }

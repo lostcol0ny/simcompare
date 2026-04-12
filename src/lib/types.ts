@@ -35,12 +35,14 @@ export interface StatBlock {
 }
 
 export interface BuffedStats {
-  attribute: { Intellect: number }
-  spell_power: number
-  spell_crit: number
-  spell_haste: number
-  mastery_value: number
-  damage_versatility: number
+  attribute?: { intellect?: number }
+  stats?: {
+    spell_power?: number
+    spell_crit?: number       // decimal fraction, e.g. 0.2456
+    spell_haste?: number      // decimal fraction, e.g. 0.7948
+    mastery_value?: number    // decimal fraction, e.g. 0.3773
+    damage_versatility?: number // decimal fraction, e.g. 0.0514
+  }
 }
 
 export interface AbilityStat {

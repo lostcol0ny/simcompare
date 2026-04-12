@@ -44,12 +44,14 @@ const MOCK_RAW: RaidbotsRawData = {
         collected_data: {
           dps: { sum: 0, count: 1, mean: 523320.82, min: 459982, max: 578566, variance: 0, std_dev: 132.92 },
           buffed_stats: {
-            attribute: { Intellect: 2529 },
-            spell_power: 2529,
-            spell_crit: 24.57,
-            spell_haste: 79.49,
-            mastery_value: 37.73,
-            damage_versatility: 5.15,
+            attribute: { intellect: 2529 },
+            stats: {
+              spell_power: 2529,
+              spell_crit: 0.2457,
+              spell_haste: 0.7949,
+              mastery_value: 0.3773,
+              damage_versatility: 0.0515,
+            },
           },
         },
         stats: [
