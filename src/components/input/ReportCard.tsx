@@ -7,9 +7,11 @@ interface Props {
   url: string
   state: ReportLoadState
   onRemove: () => void
+  customName: string
+  onNameChange: (name: string) => void
 }
 
-export function ReportCard({ label, url, state, onRemove }: Props) {
+export function ReportCard({ label, url, state, onRemove, customName, onNameChange }: Props) {
   const borderColor =
     state.status === 'valid'
       ? 'border-positive-border'
@@ -59,6 +61,15 @@ export function ReportCard({ label, url, state, onRemove }: Props) {
           <div className="text-text-muted text-xs">
             {state.report.fightStyle} · {state.report.targetCount}{' '}
             {state.report.targetCount === 1 ? 'target' : 'targets'} · {state.report.fightDuration}s
+          </div>
+          <div className="pt-1">
+            <input
+              type="text"
+              value={customName}
+              onChange={(e) => onNameChange(e.target.value)}
+              placeholder={`Label (default: ${state.report.characterName})`}
+              className="w-full rounded border border-border-subtle bg-surface px-2 py-1 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
+            />
           </div>
         </div>
       )}

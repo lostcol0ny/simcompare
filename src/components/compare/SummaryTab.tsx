@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   ErrorBar, LabelList, Cell, ResponsiveContainer, Tooltip,
@@ -12,13 +13,16 @@ const REPORT_COLORS = ['#7c3aed', '#f87171', '#60a5fa', '#34d399']
 
 interface Props {
   reports: Report[]
+  onRename: (index: number, name: string) => void
 }
 
 function fmt(n: number) {
   return Math.round(n).toLocaleString()
 }
 
-export function SummaryTab({ reports }: Props) {
+export function SummaryTab({ reports, onRename }: Props) {
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [editValue, setEditValue] = useState('')
   const maxDps = Math.max(...reports.map((r) => r.dps))
   const minDps = Math.min(...reports.map((r) => r.dps))
   const leadIdx = reports.findIndex((r) => r.dps === maxDps)
@@ -59,12 +63,35 @@ export function SummaryTab({ reports }: Props) {
                     />
                     {LABELS[i]}
                   </p>
-                  <p
-                    className="font-semibold text-sm truncate"
-                    style={{ color: classColor }}
-                  >
-                    {r.characterName}
-                  </p>
+                  {editingIndex === i ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={() => {
+                        onRename(i, editValue.trim())
+                        setEditingIndex(null)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { onRename(i, editValue.trim()); setEditingIndex(null) }
+                        if (e.key === 'Escape') setEditingIndex(null)
+                      }}
+                      className="font-semibold text-sm w-full rounded border border-accent bg-surface px-1 focus:outline-none"
+                      style={{ color: classColor }}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => { setEditingIndex(i); setEditValue(r.characterName) }}
+                      className="group flex items-center gap-1 text-left"
+                      title="Click to rename"
+                    >
+                      <span className="font-semibold text-sm truncate" style={{ color: classColor }}>
+                        {r.characterName}
+                      </span>
+                      <span className="text-text-faint opacity-0 group-hover:opacity-100 text-xs transition-opacity">✎</span>
+                    </button>
+                  )}
                   <p className="text-xs text-text-muted truncate">{r.specialization}</p>
                 </div>
               </div>

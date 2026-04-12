@@ -154,13 +154,19 @@ function parseAbilities(
     const spellName = rawName.charAt(0).toUpperCase() + rawName.slice(1)
     if (!spellName) continue
 
-    // SimC compound ability pattern: parent has dps:0 and one or more children
-    // all sharing the same spell name. Collapse by summing child DPS into the parent
-    // so it appears as a flat ability rather than an expandable group.
+    // When a parent has dps:0 but has children with DPS, promote the sum to the
+    // parent so it sorts and displays correctly rather than showing — at the bottom.
     let flatChildren = children
-    if (dps === 0 && children.length > 0 && children.every((c) => c.spellName === spellName)) {
-      dps = children.reduce((sum, c) => sum + c.dps, 0)
-      flatChildren = []
+    if (dps === 0 && children.length > 0) {
+      const childSum = children.reduce((sum, c) => sum + c.dps, 0)
+      if (childSum > 0) {
+        dps = childSum
+        // If all children share the parent's name (SimC compound ability pattern),
+        // strip them — the parent is just one flat ability like Hand of Gul'dan.
+        if (children.every((c) => c.spellName === spellName)) {
+          flatChildren = []
+        }
+      }
     }
 
     parsed.push({

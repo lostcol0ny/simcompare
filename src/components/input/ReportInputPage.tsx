@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useReportLoader } from '@/hooks/useReportLoader'
-import { encodeReportIds } from '@/lib/url-params'
+import { encodeReportIds, encodeNames } from '@/lib/url-params'
+import type { Report } from '@/lib/types'
 import { ReportCard } from './ReportCard'
 
 const LABELS = ['A', 'B', 'C', 'D']
@@ -12,6 +13,7 @@ const MAX_REPORTS = 4
 export function ReportInputPage() {
   const router = useRouter()
   const { reports, addReport, removeReport, validReports } = useReportLoader()
+  const [customNames, setCustomNames] = useState<Record<string, string>>({})
 
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -20,15 +22,21 @@ export function ReportInputPage() {
       if (reports.some((r) => r.url === text)) return
       e.preventDefault()
       addReport(text)
-      // Clear the input after paste
       ;(e.target as HTMLInputElement).value = ''
     },
     [reports, addReport]
   )
 
   const handleCompare = () => {
-    const ids = validReports.map((r) => r.id)
-    router.push(`/compare?reports=${encodeReportIds(ids)}`)
+    const validLoaded = reports.filter(
+      (r): r is typeof r & { state: { status: 'valid'; report: Report } } =>
+        r.state.status === 'valid'
+    )
+    const ids = validLoaded.map((r) => r.state.report.id)
+    const names = validLoaded.map((r) => customNames[r.url] ?? '')
+    const hasNames = names.some(Boolean)
+    const url = `/compare?reports=${encodeReportIds(ids)}${hasNames ? `&names=${encodeNames(names)}` : ''}`
+    router.push(url)
   }
 
   const canCompare = validReports.length >= 2
@@ -64,6 +72,8 @@ export function ReportInputPage() {
               url={r.url}
               state={r.state}
               onRemove={() => removeReport(r.url)}
+              customName={customNames[r.url] ?? ''}
+              onNameChange={(name) => setCustomNames((prev) => ({ ...prev, [r.url]: name }))}
             />
           ))}
         </div>
