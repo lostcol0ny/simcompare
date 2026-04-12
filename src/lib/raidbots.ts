@@ -41,6 +41,19 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
           const children = parseAbilities(petStats, totalDps)
           if (children.length === 0) return null
           const petDps = children.reduce((sum, a) => sum + a.dps, 0)
+
+          // SimC models some player abilities (e.g. Implosion, Hand of Gul'dan) as
+          // pet actors with a single child whose spell name matches the pet key.
+          // Treat those as player abilities rather than expandable pet groups.
+          if (children.length === 1) {
+            const onlyChild = children[0]
+            const childSlug = onlyChild.spellName.toLowerCase().replace(/[^a-z0-9]/g, '')
+            const keySlug = petKey.toLowerCase().replace(/[^a-z0-9]/g, '')
+            if (childSlug === keySlug || keySlug.startsWith(childSlug) || childSlug.startsWith(keySlug)) {
+              return { ...onlyChild, dps: petDps } satisfies ParsedAbility
+            }
+          }
+
           return {
             id: petNameToId(petKey),
             spellName: formatPetName(petKey),
@@ -104,9 +117,12 @@ function parseAbilities(
 
     if (dps === 0 && children.length === 0) continue
 
+    const spellName = stat.spell_name || stat.name || ''
+    if (!spellName) continue
+
     parsed.push({
       id: stat.id,
-      spellName: stat.spell_name,
+      spellName,
       school: stat.school ?? 'physical',
       dps,
       castsPerFight: stat.num_executes.mean,
