@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { extractReportId, parseRaidbotsData } from '../raidbots'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { extractReportId, parseRaidbotsData, fetchReport } from '../raidbots'
 import type { RaidbotsRawData } from '../types'
 
 const VALID_URL = 'https://www.raidbots.com/simbot/report/mifG5CJJ1wEEkSqXnLsPr6'
@@ -124,5 +124,30 @@ describe('parseRaidbotsData', () => {
   it('calculates percentOfTotal for each ability', () => {
     const result = parseRaidbotsData('abc123', MOCK_RAW)
     expect(result.abilities[0].percentOfTotal).toBeGreaterThan(0)
+  })
+})
+
+describe('fetchReport', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('constructs the correct URL and returns a Report', async () => {
+    const mockFetch = vi.mocked(fetch)
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => MOCK_RAW,
+    } as Response)
+    const report = await fetchReport('mifG5CJJ1wEEkSqXnLsPr6')
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://www.raidbots.com/simbot/report/mifG5CJJ1wEEkSqXnLsPr6/data.json'
+    )
+    expect(report.id).toBe('mifG5CJJ1wEEkSqXnLsPr6')
+  })
+
+  it('throws when the response is not ok', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 404 } as Response)
+    await expect(fetchReport('bad')).rejects.toThrow('404')
   })
 })
