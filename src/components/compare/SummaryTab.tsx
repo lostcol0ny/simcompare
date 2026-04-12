@@ -109,7 +109,7 @@ export function SummaryTab({ reports, onRename }: Props) {
               <p className="text-xs text-text-muted mt-0.5">DPS ±{fmt(r.dpsStdDev)}</p>
 
               <div className="mt-3 space-y-0.5 text-xs text-text-secondary">
-                <p>{r.fightStyle} · {r.targetCount}T · {r.fightDuration}s ±{Math.round(r.varyLength * 100)}%</p>
+                <p>{r.fightStyle} · {r.targetCount} {r.targetCount === 1 ? 'target' : 'targets'} · {r.fightDuration}s ±{Math.round(r.varyLength * 100)}%</p>
                 <p className="text-text-faint">{r.race}</p>
               </div>
             </div>
