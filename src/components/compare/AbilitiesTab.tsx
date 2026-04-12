@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Cell, ResponsiveContainer, Tooltip, Legend,
+  ResponsiveContainer, Tooltip, Legend,
 } from 'recharts'
 import type { Report } from '@/lib/types'
 import { buildAbilityRows, type AbilityRow } from '@/lib/abilities'
@@ -16,10 +16,19 @@ interface Props {
 }
 
 export function AbilitiesTab({ reports }: Props) {
-  const [showPets, setShowPets] = useState(false)
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
   const rows = buildAbilityRows(reports)
 
-  // Top 10 non-pet abilities for the chart
+  const toggleRow = useCallback((id: number) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+
+  // Top 10 non-empty abilities for the chart
   const topRows = rows.filter((r) => r.spellName !== '').slice(0, 10)
   const chartData = topRows.map((row) => {
     const entry: Record<string, string | number> = {
@@ -92,23 +101,8 @@ export function AbilitiesTab({ reports }: Props) {
       </div>
 
       {/* Table header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-surface-raised border-b border-border text-xs">
-        <span className="text-text-muted">
-          Sorted by DPS · <span className="text-accent-light">highest first</span>
-        </span>
-        <label className="flex items-center gap-2 cursor-pointer text-text-muted">
-          Show pets
-          <button
-            role="switch"
-            aria-checked={showPets}
-            onClick={() => setShowPets((v) => !v)}
-            className={`w-8 h-4 rounded-full relative transition-colors ${showPets ? 'bg-accent' : 'bg-surface-overlay'}`}
-          >
-            <span
-              className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${showPets ? 'translate-x-4' : 'translate-x-0.5'}`}
-            />
-          </button>
-        </label>
+      <div className="px-4 py-2 bg-surface-raised border-b border-border text-xs text-text-muted">
+        Sorted by DPS · <span className="text-accent-light">highest first</span>
       </div>
 
       <div
@@ -129,7 +123,8 @@ export function AbilitiesTab({ reports }: Props) {
           key={row.id}
           row={row}
           reports={reports}
-          showPets={showPets}
+          expandedRows={expandedRows}
+          toggleRow={toggleRow}
           depth={0}
         />
       ))}
@@ -140,23 +135,30 @@ export function AbilitiesTab({ reports }: Props) {
 function AbilityRowComponent({
   row,
   reports,
-  showPets,
+  expandedRows,
+  toggleRow,
   depth,
 }: {
   row: AbilityRow
   reports: Report[]
-  showPets: boolean
+  expandedRows: Set<number>
+  toggleRow: (id: number) => void
   depth: number
 }) {
   const maxDps = Math.max(...row.values.map((v) => v.dps))
   const isChild = depth > 0
-  if (isChild && !showPets) return null
+  const hasChildren = row.children.length > 0
+  const isExpanded = expandedRows.has(row.id)
 
   return (
     <>
       <div
         className={`grid items-center border-b border-border text-sm ${
-          isChild ? 'bg-surface opacity-75' : depth % 2 === 0 ? 'bg-surface' : 'bg-surface-raised'
+          isChild
+            ? 'bg-surface opacity-80'
+            : depth % 2 === 0
+            ? 'bg-surface'
+            : 'bg-surface-raised'
         }`}
         style={{
           gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 80px`,
@@ -166,16 +168,43 @@ function AbilityRowComponent({
           paddingRight: '16px',
         }}
       >
-        <div>
-          {isChild && <span className="text-text-faint mr-1 text-xs">└</span>}
-          <span className={isChild ? 'text-xs text-text-secondary' : 'font-medium text-text-primary'}>
-            {row.spellName}
-          </span>
-          {!isChild && (
-            <div className="text-xs text-text-faint">
-              {row.school} · {row.values[0]?.castsPerFight.toFixed(1)}×/fight
-            </div>
+        <div className="flex items-center gap-1 min-w-0">
+          {isChild && (
+            <span className="text-text-faint mr-0.5 text-xs shrink-0">└</span>
           )}
+
+          {/* Expand/collapse arrow for rows with children */}
+          {hasChildren ? (
+            <button
+              onClick={() => toggleRow(row.id)}
+              className="shrink-0 w-4 h-4 flex items-center justify-center text-text-muted hover:text-accent-light transition-colors"
+              aria-label={isExpanded ? 'Collapse' : 'Expand'}
+            >
+              <svg
+                viewBox="0 0 12 12"
+                width="10"
+                height="10"
+                fill="currentColor"
+                style={{ transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 150ms' }}
+              >
+                <path d="M4 2l5 4-5 4V2z" />
+              </svg>
+            </button>
+          ) : (
+            /* placeholder to keep alignment consistent */
+            !isChild && <span className="w-4 shrink-0" />
+          )}
+
+          <div className="min-w-0">
+            <span className={isChild ? 'text-xs text-text-secondary' : 'font-medium text-text-primary'}>
+              {row.spellName}
+            </span>
+            {!isChild && (
+              <div className="text-xs text-text-faint">
+                {row.school} · {row.values[0]?.castsPerFight.toFixed(1)}×/fight
+              </div>
+            )}
+          </div>
         </div>
 
         {row.values.map((v, i) => (
@@ -186,7 +215,11 @@ function AbilityRowComponent({
                 {v.exclusive && (
                   <span
                     className="ml-1 text-xs px-1 rounded"
-                    style={{ color: REPORT_COLORS[i], border: `1px solid ${REPORT_COLORS[i]}33`, backgroundColor: `${REPORT_COLORS[i]}11` }}
+                    style={{
+                      color: REPORT_COLORS[i],
+                      border: `1px solid ${REPORT_COLORS[i]}33`,
+                      backgroundColor: `${REPORT_COLORS[i]}11`,
+                    }}
                   >
                     {LABELS[i]} only
                   </span>
@@ -217,15 +250,18 @@ function AbilityRowComponent({
         </div>
       </div>
 
-      {row.children.map((child) => (
-        <AbilityRowComponent
-          key={child.id}
-          row={child}
-          reports={reports}
-          showPets={showPets}
-          depth={depth + 1}
-        />
-      ))}
+      {/* Children only render when expanded */}
+      {isExpanded &&
+        row.children.map((child) => (
+          <AbilityRowComponent
+            key={child.id}
+            row={child}
+            reports={reports}
+            expandedRows={expandedRows}
+            toggleRow={toggleRow}
+            depth={depth + 1}
+          />
+        ))}
     </>
   )
 }
