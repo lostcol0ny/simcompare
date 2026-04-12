@@ -96,9 +96,11 @@ export function decodeTalentString(encoded: string): SelectedTalent[] {
     }
 
     const isPartial = getBits(1)
-    // When isPartial=0 the node is at its maximum rank (rank 1 for single-rank
-    // nodes, which covers most talents). When isPartial=1, the actual rank
-    // count follows in the next 6 bits.
+    // When isPartial=0 the node is at max rank. Since we don't have the game
+    // DB here, we use rank=1 as a stand-in. This is correct for the majority
+    // of talents (single-rank nodes). Multi-rank nodes at max rank will show
+    // rank=1 instead of their true max — acceptable since the Spec Tree only
+    // needs selected/unselected state, not the precise rank value.
     const rank = isPartial ? getBits(6) : 1
 
     const isChoice = getBits(1)
