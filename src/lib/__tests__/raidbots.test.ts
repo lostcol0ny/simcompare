@@ -67,7 +67,7 @@ const MOCK_RAW: RaidbotsRawData = {
             children: [],
           },
         ],
-        stats_pets: [],
+        stats_pets: {},
       },
     ],
   },

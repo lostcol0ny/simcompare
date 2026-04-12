@@ -21,7 +21,7 @@ export interface RaidbotsPlayer {
     buffed_stats: BuffedStats
   }
   stats: AbilityStat[]
-  stats_pets: AbilityStat[]
+  stats_pets: Record<string, AbilityStat[]>
 }
 
 export interface StatBlock {

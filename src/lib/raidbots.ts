@@ -20,7 +20,10 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
   const cd = player.collected_data
 
   const totalDps = cd.dps.mean
-  const allStats = [...(player.stats ?? []), ...(player.stats_pets ?? [])]
+  const petStats = player.stats_pets
+    ? Object.values(player.stats_pets).flat()
+    : []
+  const allStats = [...(player.stats ?? []), ...petStats]
 
   const abilities = parseAbilities(allStats, totalDps)
 
