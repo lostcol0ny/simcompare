@@ -125,6 +125,20 @@ export function SummaryTab({ reports, onRename }: Props) {
               <div className="mt-3 space-y-0.5 text-xs text-text-secondary">
                 <p>{r.fightStyle} · {r.targetCount} {r.targetCount === 1 ? 'target' : 'targets'} · {r.fightDuration}s ±{Math.round(r.varyLength * 100)}%</p>
                 <p className="text-text-faint">{r.race}</p>
+                {r.setBonus && (
+                  <p className="text-xs mt-0.5">
+                    <span
+                      className="px-1.5 py-0.5 rounded text-xs font-medium"
+                      style={{
+                        color: REPORT_COLORS[i],
+                        backgroundColor: `${REPORT_COLORS[i]}18`,
+                        border: `1px solid ${REPORT_COLORS[i]}40`,
+                      }}
+                    >
+                      {r.setBonus.pieces}pc {r.setBonus.setName}
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
           )
