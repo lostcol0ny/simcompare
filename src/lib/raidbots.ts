@@ -57,7 +57,10 @@ function detectSetBonus(gear: Record<string, { name: string }>): SetBonus | null
 
 function parseBuff(raw: { name: string; spell_name?: string; uptime: number }): ParsedBuff {
   const rawName = raw.spell_name || raw.name
-  const name = rawName.charAt(0).toUpperCase() + rawName.slice(1)
+  const name = rawName
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
   return { name, uptime: raw.uptime }
 }
 

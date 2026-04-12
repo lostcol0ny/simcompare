@@ -201,7 +201,7 @@ describe('parseRaidbotsData — new fields', () => {
     }
     const result = parseRaidbotsData('abc123', noSpellName)
     expect(result.buffs).toHaveLength(1)
-    expect(result.buffs[0].name).toBe('Demonic_power')
+    expect(result.buffs[0].name).toBe('Demonic Power')
   })
 })
 
