@@ -9,6 +9,8 @@ import { SummaryTab } from './SummaryTab'
 import { AbilitiesTab } from './AbilitiesTab'
 import { SpecTreeTab } from './SpecTreeTab'
 import { StatsTab } from './StatsTab'
+import { TimelineTab } from './TimelineTab'
+import { BuffsTab } from './BuffsTab'
 import { decodeNames, encodeNames, encodeReportIds } from '@/lib/url-params'
 
 interface Props {
@@ -60,6 +62,8 @@ export function CompareLayout({ reports }: Props) {
           {activeTab === 'abilities' && <AbilitiesTab reports={namedReports} />}
           {activeTab === 'spec-tree' && <SpecTreeTab reports={namedReports} />}
           {activeTab === 'stats' && <StatsTab reports={namedReports} />}
+          {activeTab === 'timeline' && <TimelineTab reports={namedReports} />}
+          {activeTab === 'buffs' && <BuffsTab reports={namedReports} />}
         </div>
       </div>
     </div>
