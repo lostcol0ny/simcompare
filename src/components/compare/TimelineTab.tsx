@@ -26,7 +26,7 @@ function rollingAvg(data: number[], window: number): number[] {
 
 /** Build per-second chart data aligned across all reports. */
 function buildDpsData(reports: Report[]): Record<string, number | string>[] {
-  const maxLen = Math.max(...reports.map((r) => r.timelineDps.length))
+  const maxLen = reports.length === 0 ? 0 : Math.max(...reports.map((r) => r.timelineDps.length))
   const smoothed = reports.map((r) => rollingAvg(r.timelineDps, WINDOW))
   return Array.from({ length: maxLen }, (_, i) => {
     const row: Record<string, number | string> = { t: i }
@@ -39,7 +39,7 @@ function buildDpsData(reports: Report[]): Record<string, number | string>[] {
 
 /** Build resource timeline data for a given resource key. */
 function buildResourceData(reports: Report[], resource: string): Record<string, number | string>[] {
-  const maxLen = Math.max(...reports.map((r) => (r.resourceTimelines[resource]?.length ?? 0)))
+  const maxLen = reports.length === 0 ? 0 : Math.max(...reports.map((r) => (r.resourceTimelines[resource]?.length ?? 0)))
   if (maxLen === 0) return []
   return Array.from({ length: maxLen }, (_, i) => {
     const row: Record<string, number | string> = { t: i }
@@ -98,7 +98,7 @@ export function TimelineTab({ reports }: Props) {
                     <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
                       <p className="text-text-faint mb-1">{label}s</p>
                       {payload.map((p, i) => (
-                        <p key={i} style={{ color: p.stroke }}>
+                        <p key={i} style={{ color: p.color }}>
                           {String(p.dataKey)}: {Number(p.value).toLocaleString()} DPS
                         </p>
                       ))}
@@ -169,7 +169,7 @@ export function TimelineTab({ reports }: Props) {
                         <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
                           <p className="text-text-faint mb-1">{label}s</p>
                           {payload.map((p, i) => (
-                            <p key={i} style={{ color: p.stroke }}>
+                            <p key={i} style={{ color: p.color }}>
                               {String(p.dataKey)}: {p.value}
                             </p>
                           ))}
