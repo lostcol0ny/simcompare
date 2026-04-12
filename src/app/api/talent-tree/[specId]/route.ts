@@ -4,10 +4,20 @@ import type { TalentTreeData, TalentNode } from '@/lib/types'
 const TOKEN_URL = 'https://oauth.battle.net/token'
 const API_BASE = 'https://us.api.blizzard.com'
 
+let cachedToken: { value: string; expiresAt: number } | null = null
+
 async function getAccessToken(): Promise<string> {
-  const credentials = Buffer.from(
-    `${process.env.BLIZZARD_CLIENT_ID}:${process.env.BLIZZARD_CLIENT_SECRET}`
-  ).toString('base64')
+  if (cachedToken && Date.now() < cachedToken.expiresAt) {
+    return cachedToken.value
+  }
+
+  const clientId = process.env.BLIZZARD_CLIENT_ID
+  const clientSecret = process.env.BLIZZARD_CLIENT_SECRET
+  if (!clientId || !clientSecret) {
+    throw new Error('Missing Blizzard API credentials in environment')
+  }
+
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
 
   const res = await fetch(TOKEN_URL, {
     method: 'POST',
@@ -16,12 +26,13 @@ async function getAccessToken(): Promise<string> {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: 'grant_type=client_credentials',
-    next: { revalidate: 3600 },
   })
 
   if (!res.ok) throw new Error(`Blizzard OAuth failed: ${res.status}`)
   const data = await res.json()
-  return data.access_token
+  // Cache token with a 60s buffer before actual expiry
+  cachedToken = { value: data.access_token, expiresAt: Date.now() + (data.expires_in - 60) * 1000 }
+  return cachedToken.value
 }
 
 export async function GET(
@@ -48,8 +59,8 @@ export async function GET(
 
     if (!specRes.ok) {
       return NextResponse.json(
-        { error: `Blizzard spec lookup error: ${specRes.status}` },
-        { status: specRes.status }
+        { error: `Blizzard spec lookup failed: ${specRes.status}` },
+        { status: 502 }
       )
     }
 
@@ -62,8 +73,10 @@ export async function GET(
       )
     }
 
-    // Step 2: fetch the talent tree using the discovered URL (append locale)
-    const treeUrl = `${treeHref}&locale=en_US`
+    // Step 2: fetch the talent tree using the discovered URL
+    const treeUrlObj = new URL(treeHref)
+    treeUrlObj.searchParams.set('locale', 'en_US')
+    const treeUrl = treeUrlObj.toString()
     const treeRes = await fetch(treeUrl, {
       headers: { Authorization: `Bearer ${token}` },
       next: { revalidate: 86400 },
@@ -71,8 +84,8 @@ export async function GET(
 
     if (!treeRes.ok) {
       return NextResponse.json(
-        { error: `Blizzard talent tree error: ${treeRes.status}` },
-        { status: treeRes.status }
+        { error: `Blizzard talent tree fetch failed: ${treeRes.status}` },
+        { status: 502 }
       )
     }
 
