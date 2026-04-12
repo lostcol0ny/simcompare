@@ -35,6 +35,6 @@
 }
 
 body {
-  background-color: #0d0d1a;
-  color: #e2e8f0;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
 }
