@@ -16,27 +16,39 @@ interface NodeState {
   inSome: string[]  // labels of reports that have this node
 }
 
-const NODE_RADIUS = 20
-const PADDING = 40
+// Each display_row/col unit = this many pixels. Chosen so nodes don't overlap
+// (NODE_RADIUS * 2 = 44px diameter, CELL_SIZE = 52px → 8px gap minimum)
+const CELL_SIZE = 52
+const NODE_RADIUS = 22
+const PADDING = NODE_RADIUS + 10
 
-function normalizePositions(nodes: TalentNode[]) {
+interface PositionedNode extends TalentNode {
+  px: number
+  py: number
+}
+
+function computeLayout(nodes: TalentNode[]): {
+  nodes: PositionedNode[]
+  width: number
+  height: number
+} {
   if (nodes.length === 0) return { nodes: [], width: 0, height: 0 }
-  const xs = nodes.map((n) => n.col)
-  const ys = nodes.map((n) => n.row)
-  const minX = Math.min(...xs)
-  const minY = Math.min(...ys)
-  const maxX = Math.max(...xs)
-  const maxY = Math.max(...ys)
-  const scaleX = maxX === minX ? 1 : 600 / (maxX - minX)
-  const scaleY = maxY === minY ? 1 : 400 / (maxY - minY)
+
+  const cols = nodes.map((n) => n.col)
+  const rows = nodes.map((n) => n.row)
+  const minCol = Math.min(...cols)
+  const minRow = Math.min(...rows)
+  const maxCol = Math.max(...cols)
+  const maxRow = Math.max(...rows)
+
   return {
     nodes: nodes.map((n) => ({
       ...n,
-      px: PADDING + (n.col - minX) * scaleX,
-      py: PADDING + (n.row - minY) * scaleY,
+      px: PADDING + (n.col - minCol) * CELL_SIZE,
+      py: PADDING + (n.row - minRow) * CELL_SIZE,
     })),
-    width: 600 + PADDING * 2,
-    height: 400 + PADDING * 2,
+    width: (maxCol - minCol) * CELL_SIZE + PADDING * 2,
+    height: (maxRow - minRow) * CELL_SIZE + PADDING * 2,
   }
 }
 
@@ -59,15 +71,14 @@ export function TalentTree({ nodes, selections, labels, diffsOnly = false }: Pro
   }, [nodes, selections, labels])
 
   const { nodes: positioned, width, height } = useMemo(
-    () => normalizePositions(nodes),
+    () => computeLayout(nodes),
     [nodes]
   )
 
   const posMap = useMemo(() => {
     const m = new Map<number, { px: number; py: number }>()
     for (const n of positioned) {
-      const pos = n as TalentNode & { px: number; py: number }
-      m.set(n.id, { px: pos.px, py: pos.py })
+      m.set(n.id, { px: n.px, py: n.py })
     }
     return m
   }, [positioned])
@@ -83,7 +94,6 @@ export function TalentTree({ nodes, selections, labels, diffsOnly = false }: Pro
   }
 
   const hoveredNode = hovered != null ? positioned.find((n) => n.id === hovered) : null
-  const hoveredNodePos = hoveredNode ? (posMap.get(hoveredNode.id) ?? null) : null
   const hoveredState = hovered != null ? nodeStates.get(hovered) : null
 
   if (width === 0 || height === 0) {
@@ -98,17 +108,25 @@ export function TalentTree({ nodes, selections, labels, diffsOnly = false }: Pro
         viewBox={`0 0 ${width} ${height}`}
         className="block"
       >
+        {/* Clip paths for circular icon masking — one per node, in SVG root space */}
+        <defs>
+          {positioned.map((node) => (
+            <clipPath key={`clip-${node.id}`} id={`clip-${node.id}`}>
+              <circle cx={node.px} cy={node.py} r={NODE_RADIUS - 2} />
+            </clipPath>
+          ))}
+        </defs>
+
         {/* Connection lines */}
         {positioned.map((node) =>
           node.connects.map((targetId) => {
             const target = posMap.get(targetId)
-            const src = posMap.get(node.id)
-            if (!target || !src) return null
+            if (!target) return null
             return (
               <line
                 key={`${node.id}-${targetId}`}
-                x1={src.px}
-                y1={src.py}
+                x1={node.px}
+                y1={node.py}
                 x2={target.px}
                 y2={target.py}
                 stroke="#334155"
@@ -122,21 +140,21 @@ export function TalentTree({ nodes, selections, labels, diffsOnly = false }: Pro
         {positioned.map((node) => {
           const state = nodeStates.get(node.id)!
           if (diffsOnly && (state.inAll || state.inNone)) return null
-          const pos = posMap.get(node.id)
-          if (!pos) return null
           const { fill, stroke } = nodeColor(state)
           const isHovered = hovered === node.id
+          const r = isHovered ? NODE_RADIUS + 3 : NODE_RADIUS
 
           return (
             <g
               key={node.id}
-              transform={`translate(${pos.px},${pos.py})`}
               onMouseEnter={() => setHovered(node.id)}
               onMouseLeave={() => setHovered(null)}
               style={{ cursor: 'pointer' }}
             >
               <circle
-                r={isHovered ? NODE_RADIUS + 3 : NODE_RADIUS}
+                cx={node.px}
+                cy={node.py}
+                r={r}
                 fill={fill}
                 stroke={stroke}
                 strokeWidth={state.inAll || state.inNone ? 1.5 : 2.5}
@@ -144,14 +162,17 @@ export function TalentTree({ nodes, selections, labels, diffsOnly = false }: Pro
               {node.iconUrl ? (
                 <image
                   href={node.iconUrl}
-                  x={-NODE_RADIUS + 4}
-                  y={-NODE_RADIUS + 4}
-                  width={(NODE_RADIUS - 4) * 2}
-                  height={(NODE_RADIUS - 4) * 2}
-                  style={{ opacity: state.inNone ? 0.3 : 1 }}
+                  x={node.px - (NODE_RADIUS - 2)}
+                  y={node.py - (NODE_RADIUS - 2)}
+                  width={(NODE_RADIUS - 2) * 2}
+                  height={(NODE_RADIUS - 2) * 2}
+                  clipPath={`url(#clip-${node.id})`}
+                  style={{ opacity: state.inNone ? 0.25 : 1 }}
                 />
               ) : (
                 <text
+                  x={node.px}
+                  y={node.py}
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fontSize={7}
@@ -166,7 +187,7 @@ export function TalentTree({ nodes, selections, labels, diffsOnly = false }: Pro
       </svg>
 
       {/* Hover tooltip */}
-      {hoveredNode && hoveredNodePos && hoveredState && (
+      {hoveredNode && hoveredState && (
         <div
           className="absolute top-2 right-2 bg-surface-overlay border border-border rounded-lg p-3 max-w-xs text-xs shadow-lg"
           style={{ pointerEvents: 'none' }}
@@ -181,9 +202,7 @@ export function TalentTree({ nodes, selections, labels, diffsOnly = false }: Pro
           )}
           {!hoveredState.inAll && !hoveredState.inNone && (
             <>
-              <p className="text-positive">
-                In: {hoveredState.inSome.join(', ')}
-              </p>
+              <p className="text-positive">In: {hoveredState.inSome.join(', ')}</p>
               <p className="text-negative">
                 Not in: {labels.filter((l) => !hoveredState.inSome.includes(l)).join(', ')}
               </p>

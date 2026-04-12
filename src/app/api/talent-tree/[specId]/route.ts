@@ -18,7 +18,6 @@ async function getAccessToken(): Promise<string> {
   }
 
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
-
   const res = await fetch(TOKEN_URL, {
     method: 'POST',
     headers: {
@@ -30,9 +29,40 @@ async function getAccessToken(): Promise<string> {
 
   if (!res.ok) throw new Error(`Blizzard OAuth failed: ${res.status}`)
   const data = await res.json()
-  // Cache token with a 60s buffer before actual expiry
-  cachedToken = { value: data.access_token, expiresAt: Date.now() + (data.expires_in - 60) * 1000 }
+  cachedToken = {
+    value: data.access_token,
+    expiresAt: Date.now() + (data.expires_in - 60) * 1000,
+  }
   return cachedToken.value
+}
+
+async function fetchSpellIcons(
+  spellIds: number[],
+  token: string
+): Promise<Map<number, string>> {
+  const results = await Promise.allSettled(
+    spellIds.map(async (spellId) => {
+      const res = await fetch(
+        `${API_BASE}/data/wow/media/spell/${spellId}?namespace=static-us`,
+        { headers: { Authorization: `Bearer ${token}` }, next: { revalidate: 86400 } }
+      )
+      if (!res.ok) return { spellId, url: '' }
+      const data = await res.json()
+      const url =
+        (data.assets as Array<{ key: string; value: string }> | undefined)?.find(
+          (a) => a.key === 'icon'
+        )?.value ?? ''
+      return { spellId, url }
+    })
+  )
+
+  const map = new Map<number, string>()
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      map.set(result.value.spellId, result.value.url)
+    }
+  }
+  return map
 }
 
 export async function GET(
@@ -48,15 +78,11 @@ export async function GET(
   try {
     const token = await getAccessToken()
 
-    // Step 1: fetch the playable-specialization to discover the talent tree URL
+    // Step 1: discover the talent tree URL for this spec
     const specRes = await fetch(
       `${API_BASE}/data/wow/playable-specialization/${specId}?namespace=static-us&locale=en_US`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        next: { revalidate: 86400 },
-      }
+      { headers: { Authorization: `Bearer ${token}` }, next: { revalidate: 86400 } }
     )
-
     if (!specRes.ok) {
       return NextResponse.json(
         { error: `Blizzard spec lookup failed: ${specRes.status}` },
@@ -73,15 +99,13 @@ export async function GET(
       )
     }
 
-    // Step 2: fetch the talent tree using the discovered URL
+    // Step 2: fetch the talent tree (class + spec + hero nodes)
     const treeUrlObj = new URL(treeHref)
     treeUrlObj.searchParams.set('locale', 'en_US')
-    const treeUrl = treeUrlObj.toString()
-    const treeRes = await fetch(treeUrl, {
+    const treeRes = await fetch(treeUrlObj.toString(), {
       headers: { Authorization: `Bearer ${token}` },
       next: { revalidate: 86400 },
     })
-
     if (!treeRes.ok) {
       return NextResponse.json(
         { error: `Blizzard talent tree fetch failed: ${treeRes.status}` },
@@ -92,7 +116,18 @@ export async function GET(
     const raw = await treeRes.json()
     const nodes = parseBlizzardTree(raw)
 
-    const result: TalentTreeData = { specId, nodes }
+    // Step 3: batch-fetch spell icons (cached 24h — only runs once per spec per day)
+    const uniqueSpellIds = [
+      ...new Set(nodes.map((n) => n.spellId).filter((id) => id > 0)),
+    ]
+    const iconMap = await fetchSpellIcons(uniqueSpellIds, token)
+
+    const nodesWithIcons: TalentNode[] = nodes.map((n) => ({
+      ...n,
+      iconUrl: iconMap.get(n.spellId) ?? '',
+    }))
+
+    const result: TalentTreeData = { specId, nodes: nodesWithIcons }
     return NextResponse.json(result, {
       headers: { 'Cache-Control': 'public, max-age=86400' },
     })
@@ -106,23 +141,26 @@ function parseBlizzardTree(raw: unknown): TalentNode[] {
   const data = raw as {
     class_talent_nodes?: BlizzardNode[]
     spec_talent_nodes?: BlizzardNode[]
+    hero_talent_nodes?: BlizzardNode[]  // TWW hero talent tree
   }
 
   const allNodes = [
     ...(data.class_talent_nodes ?? []),
     ...(data.spec_talent_nodes ?? []),
+    ...(data.hero_talent_nodes ?? []),
   ]
 
   return allNodes.map((node) => {
     const firstRank = node.ranks?.[0]
-    const tooltip = firstRank?.tooltip
+    // Standard nodes use `tooltip`; choice nodes use `choice_of_tooltips[0]`
+    const tooltip = firstRank?.tooltip ?? firstRank?.choice_of_tooltips?.[0]
     return {
       id: node.id,
       row: node.display_row ?? 0,
       col: node.display_col ?? 0,
       name: tooltip?.talent?.name ?? 'Unknown',
       spellId: tooltip?.spell_tooltip?.spell?.id ?? 0,
-      iconUrl: '',  // icon requires separate media fetch; populated by client if needed
+      iconUrl: '',
       maxRank: node.ranks?.length ?? 1,
       lockedBy: node.locked_by ?? [],
       connects: node.unlocks ?? [],
@@ -138,14 +176,13 @@ interface BlizzardRankTooltip {
 interface BlizzardRank {
   rank: number
   tooltip?: BlizzardRankTooltip
+  choice_of_tooltips?: BlizzardRankTooltip[]
 }
 
 interface BlizzardNode {
   id: number
   display_row?: number
   display_col?: number
-  raw_position_x?: number
-  raw_position_y?: number
   locked_by?: number[]
   unlocks?: number[]
   ranks?: BlizzardRank[]
