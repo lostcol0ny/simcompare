@@ -14,18 +14,47 @@ export async function fetchReport(reportId: string): Promise<Report> {
   return parseRaidbotsData(reportId, raw)
 }
 
+function formatPetName(key: string): string {
+  return key.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
+
+function petNameToId(name: string): number {
+  let h = 0
+  for (let i = 0; i < name.length; i++) {
+    h = (Math.imul(31, h) + name.charCodeAt(i)) | 0
+  }
+  // Always negative so it won't collide with real spell IDs
+  return h <= 0 ? h - 1 : -h - 1
+}
+
 export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Report {
   const player = raw.sim.players[0]
   const opts = raw.sim.options
   const cd = player.collected_data
 
   const totalDps = cd.dps.mean
-  const petStats = player.stats_pets
-    ? Object.values(player.stats_pets).flat()
-    : []
-  const allStats = [...(player.stats ?? []), ...petStats]
+  const playerAbilities = parseAbilities(player.stats ?? [], totalDps)
 
-  const abilities = parseAbilities(allStats, totalDps)
+  const petGroupAbilities: ParsedAbility[] = player.stats_pets
+    ? Object.entries(player.stats_pets)
+        .map(([petKey, petStats]) => {
+          const children = parseAbilities(petStats, totalDps)
+          if (children.length === 0) return null
+          const petDps = children.reduce((sum, a) => sum + a.dps, 0)
+          return {
+            id: petNameToId(petKey),
+            spellName: formatPetName(petKey),
+            school: 'physical',
+            dps: petDps,
+            castsPerFight: 0,
+            percentOfTotal: totalDps > 0 ? (petDps / totalDps) * 100 : 0,
+            children,
+          } satisfies ParsedAbility
+        })
+        .filter((p): p is ParsedAbility => p !== null)
+    : []
+
+  const abilities = [...playerAbilities, ...petGroupAbilities].sort((a, b) => b.dps - a.dps)
 
   // buffed_stats nests the computed stats under a `stats` sub-object
   const bs = cd.buffed_stats as {

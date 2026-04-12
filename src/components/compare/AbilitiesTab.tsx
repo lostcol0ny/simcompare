@@ -199,9 +199,9 @@ function AbilityRowComponent({
             <span className={isChild ? 'text-xs text-text-secondary' : 'font-medium text-text-primary'}>
               {row.spellName}
             </span>
-            {!isChild && (
+            {!isChild && (row.values[0]?.castsPerFight ?? 0) > 0 && (
               <div className="text-xs text-text-faint">
-                {row.school} · {row.values[0]?.castsPerFight.toFixed(1)}×/fight
+                {row.school} · {row.values[0].castsPerFight.toFixed(1)}×/fight
               </div>
             )}
           </div>
