@@ -38,17 +38,20 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
   const petGroupAbilities: ParsedAbility[] = player.stats_pets
     ? Object.entries(player.stats_pets)
         .map(([petKey, petStats]) => {
-          const children = parseAbilities(petStats, totalDps)
-          if (children.length === 0) return null
-          const petDps = children.reduce((sum, a) => sum + a.dps, 0)
+          // Flatten the (potentially nested) pet actor tree to leaf abilities
+          // that have actual DPS, then merge duplicates by spell name. This handles
+          // both real pets (Felguard has Felstorm + Legion Strike + Melee) and
+          // ability-based actors (Implosion imps all cast "Implosion").
+          const rawChildren = parseAbilities(petStats, totalDps)
+          const leaves = collectLeaves(rawChildren)
+          if (leaves.length === 0) return null
 
-          // SimC models some player abilities (e.g. Implosion, Hand of Gul'dan,
-          // Ruination) as pet actors where every child shares the same spell name
-          // (multiple imp instances of the same ability). Collapse these into a
-          // single player-level ability entry rather than an expandable pet group.
-          const uniqueNames = new Set(children.map((c) => c.spellName))
-          if (uniqueNames.size === 1) {
-            return { ...children[0], dps: petDps, castsPerFight: children.reduce((s, c) => s + c.castsPerFight, 0) } satisfies ParsedAbility
+          const merged = mergeLeavesByName(leaves, totalDps)
+          const petDps = merged.reduce((sum, a) => sum + a.dps, 0)
+
+          if (merged.length === 1) {
+            // Single ability → promote to player level, no expand arrow
+            return merged[0] satisfies ParsedAbility
           }
 
           return {
@@ -58,7 +61,7 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
             dps: petDps,
             castsPerFight: 0,
             percentOfTotal: totalDps > 0 ? (petDps / totalDps) * 100 : 0,
-            children,
+            children: merged,
           } satisfies ParsedAbility
         })
         .filter((p): p is ParsedAbility => p !== null)
@@ -100,6 +103,39 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
       versatility: (bs.stats?.damage_versatility ?? 0) * 100,
     },
   }
+}
+
+/** Recursively collect all abilities with dps > 0 from a parsed tree. */
+function collectLeaves(abilities: ParsedAbility[]): ParsedAbility[] {
+  const result: ParsedAbility[] = []
+  for (const a of abilities) {
+    if (a.dps > 0) {
+      result.push(a)
+    } else if (a.children.length > 0) {
+      result.push(...collectLeaves(a.children))
+    }
+  }
+  return result
+}
+
+/** Merge leaf abilities by spell name, summing DPS and casts. */
+function mergeLeavesByName(leaves: ParsedAbility[], totalDps: number): ParsedAbility[] {
+  const map = new Map<string, ParsedAbility>()
+  for (const a of leaves) {
+    const existing = map.get(a.spellName)
+    if (existing) {
+      const dps = existing.dps + a.dps
+      map.set(a.spellName, {
+        ...existing,
+        dps,
+        castsPerFight: existing.castsPerFight + a.castsPerFight,
+        percentOfTotal: totalDps > 0 ? (dps / totalDps) * 100 : 0,
+      })
+    } else {
+      map.set(a.spellName, { ...a, children: [] })
+    }
+  }
+  return [...map.values()].sort((a, b) => b.dps - a.dps)
 }
 
 function parseAbilities(
