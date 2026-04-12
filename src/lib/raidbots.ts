@@ -8,8 +8,7 @@ export function extractReportId(url: string): string | null {
 }
 
 export async function fetchReport(reportId: string): Promise<Report> {
-  const url = `https://www.raidbots.com/simbot/report/${reportId}/data.json`
-  const res = await fetch(url)
+  const res = await fetch(`/api/report/${reportId}`)
   if (!res.ok) throw new Error(`Report not found (${res.status})`)
   const raw: RaidbotsRawData = await res.json()
   return parseRaidbotsData(reportId, raw)

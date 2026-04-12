@@ -141,7 +141,7 @@ describe('fetchReport', () => {
     } as Response)
     const report = await fetchReport('mifG5CJJ1wEEkSqXnLsPr6')
     expect(mockFetch).toHaveBeenCalledWith(
-      'https://www.raidbots.com/simbot/report/mifG5CJJ1wEEkSqXnLsPr6/data.json'
+      '/api/report/mifG5CJJ1wEEkSqXnLsPr6'
     )
     expect(report.id).toBe('mifG5CJJ1wEEkSqXnLsPr6')
   })
