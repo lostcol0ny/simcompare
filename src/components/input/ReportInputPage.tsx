@@ -17,12 +17,13 @@ export function ReportInputPage() {
     (e: React.ClipboardEvent<HTMLInputElement>) => {
       const text = e.clipboardData.getData('text').trim()
       if (!text || reports.length >= MAX_REPORTS) return
+      if (reports.some((r) => r.url === text)) return
       e.preventDefault()
       addReport(text)
       // Clear the input after paste
       ;(e.target as HTMLInputElement).value = ''
     },
-    [reports.length, addReport]
+    [reports, addReport]
   )
 
   const handleCompare = () => {
