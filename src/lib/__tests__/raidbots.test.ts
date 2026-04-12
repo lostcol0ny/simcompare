@@ -167,6 +167,42 @@ describe('parseRaidbotsData — new fields', () => {
     const result = parseRaidbotsData('abc123', MOCK_RAW_EXTENDED)
     expect(result.resourceTimelines['soul_shard']).toEqual([4, 3, 3, 2, 5])
   })
+
+  it('returns setBonus with pieces: 2 for exactly 2 matching gear items', () => {
+    const twopiece: RaidbotsRawData = {
+      ...MOCK_RAW_EXTENDED,
+      sim: {
+        ...MOCK_RAW_EXTENDED.sim,
+        players: [{
+          ...MOCK_RAW_EXTENDED.sim.players[0],
+          gear: {
+            head:  { name: 'abyssal_immolators_smoldering_flames' },
+            chest: { name: 'abyssal_immolators_dreadrobe' },
+            neck:  { name: 'eternal_voidsong_chain' },
+          },
+        }],
+      },
+    }
+    const result = parseRaidbotsData('abc123', twopiece)
+    expect(result.setBonus).not.toBeNull()
+    expect(result.setBonus!.pieces).toBe(2)
+  })
+
+  it('uses buff name as fallback when spell_name is absent', () => {
+    const noSpellName: RaidbotsRawData = {
+      ...MOCK_RAW_EXTENDED,
+      sim: {
+        ...MOCK_RAW_EXTENDED.sim,
+        players: [{
+          ...MOCK_RAW_EXTENDED.sim.players[0],
+          buffs: [{ name: 'demonic_power', uptime: 50.0 }],
+        }],
+      },
+    }
+    const result = parseRaidbotsData('abc123', noSpellName)
+    expect(result.buffs).toHaveLength(1)
+    expect(result.buffs[0].name).toBe('Demonic_power')
+  })
 })
 
 describe('parseRaidbotsData', () => {

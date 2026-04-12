@@ -45,11 +45,13 @@ function detectSetBonus(gear: Record<string, { name: string }>): SetBonus | null
   }
   if (!best) return null
   // Format: "abyssal_immolators" -> "Abyssal Immolator" (drop trailing 's')
-  const setName = best[0]
-    .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+  const words = best[0].split('_')
+  const setName = words
+    .map((w, i) => {
+      const title = w.charAt(0).toUpperCase() + w.slice(1)
+      return i === words.length - 1 ? title.replace(/s$/, '') : title
+    })
     .join(' ')
-    .replace(/s$/, '')
   return { setName, pieces: best[1] }
 }
 
