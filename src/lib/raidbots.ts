@@ -145,7 +145,7 @@ function parseAbilities(
   const parsed: ParsedAbility[] = []
 
   for (const stat of stats) {
-    const dps = stat.portion_aps?.mean ?? 0
+    let dps = stat.portion_aps?.mean ?? 0
     const children = stat.children ? parseAbilities(stat.children, totalDps) : []
 
     if (dps === 0 && children.length === 0) continue
@@ -154,6 +154,15 @@ function parseAbilities(
     const spellName = rawName.charAt(0).toUpperCase() + rawName.slice(1)
     if (!spellName) continue
 
+    // SimC compound ability pattern: parent has dps:0 and one or more children
+    // all sharing the same spell name. Collapse by summing child DPS into the parent
+    // so it appears as a flat ability rather than an expandable group.
+    let flatChildren = children
+    if (dps === 0 && children.length > 0 && children.every((c) => c.spellName === spellName)) {
+      dps = children.reduce((sum, c) => sum + c.dps, 0)
+      flatChildren = []
+    }
+
     parsed.push({
       id: stat.id,
       spellName,
@@ -161,7 +170,7 @@ function parseAbilities(
       dps,
       castsPerFight: stat.num_executes.mean,
       percentOfTotal: totalDps > 0 ? (dps / totalDps) * 100 : 0,
-      children,
+      children: flatChildren,
     })
   }
 
