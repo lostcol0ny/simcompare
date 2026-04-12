@@ -95,7 +95,7 @@ export function SummaryTab({ reports }: Props) {
         <div className="px-4 pt-6 pb-2 border-b border-border">
           <p className="text-xs text-text-faint uppercase tracking-wide mb-4">DPS Comparison</p>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={chartData} margin={{ top: 20, right: 24, bottom: 4, left: 16 }} barCategoryGap="35%">
+            <BarChart data={chartData} margin={{ top: 20, right: 24, bottom: 4, left: 16 }} barCategoryGap="20%">
               <CartesianGrid vertical={false} stroke="#1e293b" strokeDasharray="3 3" />
               <XAxis
                 dataKey="label"
@@ -149,10 +149,10 @@ export function SummaryTab({ reports }: Props) {
               {LABELS[i]} Stats
             </p>
             <div className="space-y-1 text-xs">
-              <StatBar label="Haste" value={r.buffedStats.spellHaste} max={Math.max(...reports.map(x => x.buffedStats.spellHaste))} color={REPORT_COLORS[i]} />
-              <StatBar label="Crit" value={r.buffedStats.spellCrit} max={Math.max(...reports.map(x => x.buffedStats.spellCrit))} color={REPORT_COLORS[i]} />
-              <StatBar label="Mastery" value={r.buffedStats.mastery} max={Math.max(...reports.map(x => x.buffedStats.mastery))} color={REPORT_COLORS[i]} />
-              <StatBar label="Vers" value={r.buffedStats.versatility} max={Math.max(...reports.map(x => x.buffedStats.versatility))} color={REPORT_COLORS[i]} />
+              <StatBar label="Haste" value={r.buffedStats.spellHaste} color={REPORT_COLORS[i]} />
+              <StatBar label="Crit" value={r.buffedStats.spellCrit} color={REPORT_COLORS[i]} />
+              <StatBar label="Mastery" value={r.buffedStats.mastery} color={REPORT_COLORS[i]} />
+              <StatBar label="Vers" value={r.buffedStats.versatility} color={REPORT_COLORS[i]} />
             </div>
           </div>
         ))}
@@ -161,8 +161,11 @@ export function SummaryTab({ reports }: Props) {
   )
 }
 
-function StatBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
-  const pct = max > 0 ? (value / max) * 100 : 0
+// value is already a percentage (e.g. 79.5 for 79.5% haste).
+// Bar width = value directly, capped at 100, so you can see the actual
+// stat distribution: 79.5% haste is a long bar, 5.1% vers is a short bar.
+function StatBar({ label, value, color }: { label: string; value: number; color: string }) {
+  const pct = Math.min(Math.max(value, 0), 100)
   return (
     <div className="flex items-center gap-2">
       <span className="text-text-faint w-14 shrink-0">{label}</span>
