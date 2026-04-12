@@ -23,6 +23,13 @@ function fmt(n: number) {
 export function SummaryTab({ reports, onRename }: Props) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
+
+  function copyTalents(idx: number, str: string) {
+    navigator.clipboard.writeText(str)
+    setCopiedIdx(idx)
+    setTimeout(() => setCopiedIdx(null), 1500)
+  }
   const maxDps = Math.max(...reports.map((r) => r.dps))
   const minDps = Math.min(...reports.map((r) => r.dps))
   const leadIdx = reports.findIndex((r) => r.dps === maxDps)
@@ -107,6 +114,13 @@ export function SummaryTab({ reports, onRename }: Props) {
                 )}
               </div>
               <p className="text-xs text-text-muted mt-0.5">DPS ±{fmt(r.dpsStdDev)}</p>
+
+              <button
+                onClick={() => copyTalents(i, r.talentString)}
+                className="mt-2 text-xs px-2 py-0.5 rounded border border-border text-text-muted hover:text-accent-light hover:border-accent transition-colors"
+              >
+                {copiedIdx === i ? '✓ Copied' : 'Copy talents'}
+              </button>
 
               <div className="mt-3 space-y-0.5 text-xs text-text-secondary">
                 <p>{r.fightStyle} · {r.targetCount} {r.targetCount === 1 ? 'target' : 'targets'} · {r.fightDuration}s ±{Math.round(r.varyLength * 100)}%</p>
