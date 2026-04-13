@@ -21,6 +21,7 @@ const CONTENT_MAX_WIDTH: Record<number, string> = {
   2: 'max-w-2xl',
   3: 'max-w-4xl',
   4: 'max-w-6xl',
+  5: 'max-w-7xl',
 }
 
 export function CompareLayout({ reports }: Props) {
@@ -50,6 +51,20 @@ export function CompareLayout({ reports }: Props) {
     })
   }, [reports, router])
 
+  const handleRemoveReport = useCallback((index: number) => {
+    const remaining = reports.filter((_, i) => i !== index)
+    if (remaining.length < 2) {
+      router.push('/')
+      return
+    }
+    const nextNames = customNames.filter((_, i) => i !== index)
+    setCustomNames(nextNames)
+    const ids = encodeReportIds(remaining.map((r) => r.id))
+    const hasNames = nextNames.some(Boolean)
+    const newUrl = `/compare?reports=${ids}${hasNames ? `&names=${encodeNames(nextNames)}` : ''}`
+    router.replace(newUrl, { scroll: false })
+  }, [reports, customNames, router])
+
   const maxWidth = CONTENT_MAX_WIDTH[reports.length] ?? 'max-w-6xl'
 
   return (
@@ -58,9 +73,9 @@ export function CompareLayout({ reports }: Props) {
       <TabNav active={activeTab} onChange={setActiveTab} />
       <div className="flex-1">
         <div className={`mx-auto w-full ${maxWidth}`}>
-          {activeTab === 'summary' && <SummaryTab reports={namedReports} onRename={handleRename} />}
+          {activeTab === 'summary' && <SummaryTab reports={namedReports} onRename={handleRename} onRemove={handleRemoveReport} />}
           {activeTab === 'abilities' && <AbilitiesTab reports={namedReports} />}
-          {activeTab === 'spec-tree' && <SpecTreeTab reports={namedReports} />}
+          {activeTab === 'talents' && <SpecTreeTab reports={namedReports} />}
           {activeTab === 'stats' && <StatsTab reports={namedReports} />}
           {activeTab === 'timeline' && <TimelineTab reports={namedReports} />}
           {activeTab === 'buffs' && <BuffsTab reports={namedReports} />}

@@ -6,9 +6,7 @@ import { useReportLoader } from '@/hooks/useReportLoader'
 import { encodeReportIds, encodeNames } from '@/lib/url-params'
 import type { Report } from '@/lib/types'
 import { ReportCard } from './ReportCard'
-
-const LABELS = ['A', 'B', 'C', 'D']
-const MAX_REPORTS = 4
+import { LABELS } from '@/lib/report-labels'
 
 export function ReportInputPage() {
   const router = useRouter()
@@ -18,7 +16,7 @@ export function ReportInputPage() {
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLInputElement>) => {
       const text = e.clipboardData.getData('text').trim()
-      if (!text || reports.length >= MAX_REPORTS) return
+      if (!text) return
       if (reports.some((r) => r.url === text)) return
       e.preventDefault()
       addReport(text)
@@ -48,20 +46,23 @@ export function ReportInputPage() {
         Compare Raidbots simulation reports side by side.
       </p>
 
-      {reports.length < MAX_REPORTS && (
-        <div className="mb-6">
-          <label className="block text-text-secondary text-xs mb-2">
-            Paste a Raidbots report URL
-          </label>
-          <input
-            type="text"
-            onPaste={handlePaste}
-            placeholder="https://www.raidbots.com/simbot/report/…"
-            className="w-full rounded border border-border-subtle bg-surface-raised px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
-            readOnly={false}
-          />
-        </div>
-      )}
+      <div className="mb-6">
+        <label className="block text-text-secondary text-xs mb-2">
+          Paste a Raidbots report URL
+        </label>
+        <input
+          type="text"
+          onPaste={handlePaste}
+          placeholder="https://www.raidbots.com/simbot/report/…"
+          className="w-full rounded border border-border-subtle bg-surface-raised px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
+          readOnly={false}
+        />
+        {reports.length >= 6 && (
+          <p className="mt-1.5 text-xs text-text-muted">
+            Displaying many reports may get narrow on smaller screens.
+          </p>
+        )}
+      </div>
 
       {reports.length > 0 && (
         <div className="space-y-3 mb-8">

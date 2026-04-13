@@ -5,9 +5,7 @@ import {
   PolarRadiusAxis, ResponsiveContainer, Legend, Tooltip,
 } from 'recharts'
 import type { Report } from '@/lib/types'
-
-const LABELS = ['A', 'B', 'C', 'D']
-const REPORT_COLORS = ['#7c3aed', '#f87171', '#60a5fa', '#34d399']
+import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
 
 interface Props {
   reports: Report[]
@@ -107,30 +105,30 @@ export function StatsTab({ reports }: Props) {
       <Section title="Secondary Stats (buffed)">
         <StatRow
           label="Haste"
-          values={reports.map((r) => `${r.buffedStats.spellHaste.toFixed(2)}%`)}
+          values={reports.map((r) => `${r.buffedStats.spellHaste.toFixed(2)}%${r.buffedStats.hasteRating ? ` (${r.buffedStats.hasteRating.toLocaleString()})` : ''}`)}
           rawValues={reports.map((r) => r.buffedStats.spellHaste)}
-          unit="pp"
+          unit="%"
           reports={reports}
         />
         <StatRow
           label="Crit"
-          values={reports.map((r) => `${r.buffedStats.spellCrit.toFixed(2)}%`)}
+          values={reports.map((r) => `${r.buffedStats.spellCrit.toFixed(2)}%${r.buffedStats.critRating ? ` (${r.buffedStats.critRating.toLocaleString()})` : ''}`)}
           rawValues={reports.map((r) => r.buffedStats.spellCrit)}
-          unit="pp"
+          unit="%"
           reports={reports}
         />
         <StatRow
           label="Mastery"
-          values={reports.map((r) => `${r.buffedStats.mastery.toFixed(2)}%`)}
+          values={reports.map((r) => `${r.buffedStats.mastery.toFixed(2)}%${r.buffedStats.masteryRating ? ` (${r.buffedStats.masteryRating.toLocaleString()})` : ''}`)}
           rawValues={reports.map((r) => r.buffedStats.mastery)}
-          unit="pp"
+          unit="%"
           reports={reports}
         />
         <StatRow
           label="Versatility"
-          values={reports.map((r) => `${r.buffedStats.versatility.toFixed(2)}%`)}
+          values={reports.map((r) => `${r.buffedStats.versatility.toFixed(2)}%${r.buffedStats.versatilityRating ? ` (${r.buffedStats.versatilityRating.toLocaleString()})` : ''}`)}
           rawValues={reports.map((r) => r.buffedStats.versatility)}
-          unit="pp"
+          unit="%"
           reports={reports}
         />
       </Section>
@@ -180,14 +178,13 @@ function StatRow({
         return (
           <span
             key={i}
-            className="px-3 py-2 border-r border-border last:border-0"
-            style={{ color: isMax && reports.length > 1 ? REPORT_COLORS[i] : undefined }}
+            className={`px-3 py-2 border-r border-border last:border-0${isMax && reports.length > 1 ? ' text-positive' : ''}`}
           >
             {v}
             {delta !== null && (
-              <span className={`ml-1 text-xs ${delta > 0 ? 'text-positive' : 'text-negative'}`}>
+              <span className="ml-1 text-xs text-negative">
                 {delta > 0 ? '+' : ''}
-                {unit === 'pp' ? `${delta.toFixed(1)}pp` : delta.toLocaleString()}
+                {unit === '%' ? `${delta.toFixed(1)}%` : delta.toLocaleString()}
               </span>
             )}
           </span>

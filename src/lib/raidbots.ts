@@ -124,6 +124,10 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
       spell_haste?: number
       mastery_value?: number
       damage_versatility?: number
+      haste_rating?: number
+      crit_rating?: number
+      mastery_rating?: number
+      versatility_rating?: number
     }
   }
 
@@ -150,7 +154,7 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
     race: player.race,
     talentString: player.talents,
     dps: cd.dps.mean,
-    dpsStdDev: cd.dps.std_dev,
+    dpsStdDev: cd.dps.count > 0 ? cd.dps.std_dev / Math.sqrt(cd.dps.count) : cd.dps.std_dev,
     fightStyle: opts.fight_style,
     targetCount: opts.desired_targets,
     fightDuration: opts.max_time,
@@ -160,9 +164,13 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
       intellect: bs.attribute?.intellect ?? 0,
       spellPower: bs.stats?.spell_power ?? 0,
       spellCrit: (bs.stats?.spell_crit ?? 0) * 100,
-      spellHaste: (bs.stats?.spell_haste ?? 0) * 100,
+      spellHaste: bs.stats?.spell_haste ? (1 / bs.stats.spell_haste - 1) * 100 : 0,
       mastery: (bs.stats?.mastery_value ?? 0) * 100,
       versatility: (bs.stats?.damage_versatility ?? 0) * 100,
+      hasteRating: bs.stats?.haste_rating ?? 0,
+      critRating: bs.stats?.crit_rating ?? 0,
+      masteryRating: bs.stats?.mastery_rating ?? 0,
+      versatilityRating: bs.stats?.versatility_rating ?? 0,
     },
     setBonus,
     buffs,

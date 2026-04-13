@@ -59,6 +59,10 @@ export interface BuffedStats {
     spell_haste?: number
     mastery_value?: number
     damage_versatility?: number
+    haste_rating?: number
+    crit_rating?: number
+    mastery_rating?: number
+    versatility_rating?: number
   }
 }
 
@@ -116,6 +120,10 @@ export interface Report {
     spellHaste: number
     mastery: number
     versatility: number
+    hasteRating: number
+    critRating: number
+    masteryRating: number
+    versatilityRating: number
   }
   setBonus: SetBonus | null
   buffs: ParsedBuff[]
@@ -138,6 +146,17 @@ export interface ParsedAbility {
 export interface TalentTreeData {
   specId: number
   nodes: TalentNode[]
+  classNodeIds: number[]  // IDs of class talent nodes
+  specNodeIds: number[]   // IDs of spec talent nodes
+  heroNodeIds: number[]   // IDs of hero talent nodes (all hero trees, deduplicated)
+  heroTrees: HeroTree[]   // per-hero-spec node membership (for filtering)
+  specIconUrl: string     // Icon URL from Blizzard spec media API
+}
+
+/** One hero talent spec (e.g. "Diabolist") and the node IDs it owns */
+export interface HeroTree {
+  name: string
+  nodeIds: number[]
 }
 
 export interface TalentNode {
@@ -150,12 +169,14 @@ export interface TalentNode {
   maxRank: number
   lockedBy: number[]
   connects: number[]
+  choiceNames?: string[]  // for choice nodes: [choice0Name, choice1Name]
 }
 
 /** A decoded talent node selection from a loadout string */
 export interface SelectedTalent {
   nodeId: number
   rank: number
+  choiceIndex?: number  // 0 or 1 for choice nodes
 }
 
 /** Status of a report being loaded on the input page */

@@ -7,9 +7,7 @@ import {
 } from 'recharts'
 import type { Report } from '@/lib/types'
 import { buildAbilityRows, type AbilityRow } from '@/lib/abilities'
-
-const LABELS = ['A', 'B', 'C', 'D']
-const REPORT_COLORS = ['#7c3aed', '#f87171', '#60a5fa', '#34d399']
+import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
 
 interface Props {
   reports: Report[]
@@ -237,7 +235,7 @@ function AbilityRowComponent({
               if (v.dps === 0) return null
               const pct = ((v.dps - maxDps) / maxDps) * 100
               if (pct === 0) return null
-              const color = pct < -5 ? 'text-negative' : pct < -2 ? 'text-text-muted' : 'text-positive'
+              const color = pct < -2 ? 'text-negative' : 'text-text-muted'
               return (
                 <span key={i} className={`block ${color}`}>
                   {LABELS[i]}: {pct.toFixed(1)}%

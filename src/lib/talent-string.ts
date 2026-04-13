@@ -88,9 +88,10 @@ export function decodeTalentString(encoded: string): SelectedTalent[] {
 
     const isPurchased = getBits(1)
     if (!isPurchased) {
-      // Node is passively granted (not a player-chosen talent)
-      const isChoice = getBits(1)
-      if (isChoice) getBits(2) // choice index
+      // Passively granted (auto-selected, e.g. hero spec entry node).
+      // The encoder writes only the two header bits (selected=1, purchased=0)
+      // and nothing else — no rank, no choice bits.
+      selected.push({ nodeId: nodeSlot, rank: 1 })
       nodeSlot++
       continue
     }
@@ -104,9 +105,9 @@ export function decodeTalentString(encoded: string): SelectedTalent[] {
     const rank = isPartial ? getBits(6) : 1
 
     const isChoice = getBits(1)
-    if (isChoice) getBits(2) // choice index — consume bits but ignore for now
+    const choiceIndex = isChoice ? getBits(2) : undefined
 
-    selected.push({ nodeId: nodeSlot, rank })
+    selected.push({ nodeId: nodeSlot, rank, ...(choiceIndex !== undefined && { choiceIndex }) })
     nodeSlot++
   }
 

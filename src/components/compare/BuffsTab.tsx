@@ -1,9 +1,7 @@
 'use client'
 
 import type { Report } from '@/lib/types'
-
-const LABELS = ['A', 'B', 'C', 'D']
-const REPORT_COLORS = ['#7c3aed', '#f87171', '#60a5fa', '#34d399']
+import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
 
 interface Props {
   reports: Report[]

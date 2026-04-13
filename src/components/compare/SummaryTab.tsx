@@ -1,29 +1,86 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   ErrorBar, LabelList, Cell, ResponsiveContainer, Tooltip,
 } from 'recharts'
-import type { Report } from '@/lib/types'
-import { getSpecIconUrl, getClassColor } from '@/lib/wow-icons'
-
-const LABELS = ['A', 'B', 'C', 'D']
-const REPORT_COLORS = ['#7c3aed', '#f87171', '#60a5fa', '#34d399']
+import type { Report, TalentTreeData, SelectedTalent } from '@/lib/types'
+import { getClassColor } from '@/lib/wow-icons'
+import { getSpecId } from '@/lib/spec-ids'
+import { decodeTalentString } from '@/lib/talent-string'
+import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
 
 interface Props {
   reports: Report[]
   onRename: (index: number, name: string) => void
+  onRemove: (index: number) => void
 }
 
 function fmt(n: number) {
   return Math.round(n).toLocaleString()
 }
 
-export function SummaryTab({ reports, onRename }: Props) {
+export function SummaryTab({ reports, onRename, onRemove }: Props) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
+  const [treesBySpec, setTreesBySpec] = useState<Map<number, TalentTreeData>>(new Map())
+
+  // Fetch talent trees for hero spec icon detection
+  useEffect(() => {
+    const specIds = [
+      ...new Set(
+        reports
+          .map((r) => getSpecId(r.specialization))
+          .filter((id): id is number => id !== null)
+      ),
+    ]
+    Promise.all(
+      specIds.map((specId) =>
+        fetch(`/api/talent-tree/${specId}`)
+          .then((r) => (r.ok ? (r.json() as Promise<TalentTreeData>) : null))
+          .then((data) => (data ? ([specId, data] as [number, TalentTreeData]) : null))
+          .catch(() => null)
+      )
+    ).then((results) => {
+      const map = new Map<number, TalentTreeData>()
+      results.forEach((r) => { if (r) map.set(r[0], r[1]) })
+      setTreesBySpec(map)
+    })
+  }, [reports])
+
+  function getHeroSpecIcon(report: Report): string {
+    const specId = getSpecId(report.specialization)
+    if (!specId) return ''
+    const treeData = treesBySpec.get(specId)
+    if (!treeData?.heroNodeIds?.length) return ''
+
+    let rawSelections: SelectedTalent[]
+    try {
+      rawSelections = decodeTalentString(report.talentString)
+    } catch {
+      return ''
+    }
+
+    const sortedNodes = [...treeData.nodes].sort((a, b) => a.id - b.id)
+    const selections = rawSelections
+      .filter((s) => s.nodeId < sortedNodes.length)
+      .map((s) => ({ nodeId: sortedNodes[s.nodeId].id, rank: s.rank }))
+
+    const heroIdSet = new Set(treeData.heroNodeIds)
+    const selectedHeroNodeIds = new Set(
+      selections.filter((s) => heroIdSet.has(s.nodeId) && s.rank > 0).map((s) => s.nodeId)
+    )
+    if (selectedHeroNodeIds.size === 0) return ''
+
+    // Pick the topmost selected hero node (lowest row) as the hero spec entry
+    const entryNode = treeData.nodes
+      .filter((n) => selectedHeroNodeIds.has(n.id))
+      .sort((a, b) => a.row - b.row || a.col - b.col)[0]
+
+    return entryNode?.iconUrl ?? ''
+  }
 
   function copyTalents(idx: number, str: string) {
     navigator.clipboard.writeText(str)
@@ -47,21 +104,52 @@ export function SummaryTab({ reports, onRename }: Props) {
       {/* Report identity cards */}
       <div className="flex divide-x divide-border border-b border-border">
         {reports.map((r, i) => {
-          const iconUrl = getSpecIconUrl(r.specialization)
+          const specId = getSpecId(r.specialization)
+          const iconUrl = (specId && treesBySpec.get(specId)?.specIconUrl) || ''
+          const heroIconUrl = getHeroSpecIcon(r)
           const classColor = getClassColor(r.specialization)
           const isLeader = i === leadIdx && reports.length > 1
           return (
-            <div key={r.id} className="flex-1 p-5 min-w-0">
+            <div
+              key={r.id}
+              className="flex-1 p-5 min-w-0 relative"
+              style={{ background: `linear-gradient(180deg, ${classColor}14 0%, transparent 72px)` }}
+            >
+              {/* Remove report button */}
+              <button
+                onClick={() => onRemove(i)}
+                className="absolute top-2 right-2 text-text-faint hover:text-negative transition-colors"
+                aria-label="Remove report"
+                title="Remove this report"
+              >
+                <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+                  <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z" />
+                </svg>
+              </button>
+
               <div className="flex items-center gap-3 mb-3">
-                {iconUrl && (
-                  <img
-                    src={iconUrl}
-                    alt={r.specialization}
-                    className="w-10 h-10 rounded-full border-2 shrink-0"
-                    style={{ borderColor: classColor }}
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                  />
-                )}
+                {/* Spec icon with hero spec overlay */}
+                <div className="relative shrink-0">
+                  {iconUrl && (
+                    <img
+                      src={iconUrl}
+                      alt={r.specialization}
+                      className="w-14 h-14 rounded-full border-2"
+                      style={{ borderColor: classColor }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    />
+                  )}
+                  {heroIconUrl && (
+                    <img
+                      src={heroIconUrl}
+                      alt="hero spec"
+                      className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full border-2"
+                      style={{ borderColor: 'var(--color-surface)' }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                    />
+                  )}
+                </div>
+
                 <div className="min-w-0">
                   <p className="text-xs text-text-faint uppercase tracking-wide">
                     <span

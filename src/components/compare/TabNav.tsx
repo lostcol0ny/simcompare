@@ -1,11 +1,11 @@
 'use client'
 
-export type TabId = 'summary' | 'abilities' | 'spec-tree' | 'stats' | 'timeline' | 'buffs'
+export type TabId = 'summary' | 'abilities' | 'talents' | 'stats' | 'timeline' | 'buffs'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'summary', label: 'Summary' },
   { id: 'abilities', label: 'Abilities' },
-  { id: 'spec-tree', label: 'Spec Tree' },
+  { id: 'talents', label: 'Talents' },
   { id: 'stats', label: 'Stats' },
   { id: 'timeline', label: 'Timeline' },
   { id: 'buffs', label: 'Buffs & Resources' },

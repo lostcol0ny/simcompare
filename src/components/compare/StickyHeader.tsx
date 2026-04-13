@@ -5,9 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { Report } from '@/lib/types'
 import { extractReportId } from '@/lib/raidbots'
 import { encodeReportIds } from '@/lib/url-params'
-
-const LABELS = ['A', 'B', 'C', 'D']
-const MAX_REPORTS = 4
+import { LABELS } from '@/lib/report-labels'
 
 interface Props {
   reports: Report[]
@@ -69,14 +67,12 @@ export function StickyHeader({ reports }: Props) {
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          {reports.length < MAX_REPORTS && (
-            <button
-              onClick={() => setAddingReport((v) => !v)}
-              className="text-xs text-accent-light hover:opacity-80"
-            >
-              + Add report
-            </button>
-          )}
+          <button
+            onClick={() => setAddingReport((v) => !v)}
+            className="text-xs text-accent-light hover:opacity-80"
+          >
+            + Add report
+          </button>
           <button
             onClick={copyLink}
             className="text-xs text-positive hover:opacity-80"

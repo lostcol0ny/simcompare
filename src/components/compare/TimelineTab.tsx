@@ -6,9 +6,8 @@ import {
   ResponsiveContainer, Tooltip, Legend,
 } from 'recharts'
 import type { Report } from '@/lib/types'
+import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
 
-const LABELS = ['A', 'B', 'C', 'D']
-const REPORT_COLORS = ['#7c3aed', '#f87171', '#60a5fa', '#34d399']
 const WINDOW = 10  // rolling average window in seconds
 
 interface Props {
