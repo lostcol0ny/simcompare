@@ -22,6 +22,35 @@ export function mapSelections(rawSel: SelectedTalent[], treeData: TalentTreeData
 }
 
 /**
+ * Filters out nodes belonging to inactive hero trees.
+ * Some talent strings encode inactive hero tree nodes as selected;
+ * this removes them so only the active hero tree's nodes remain.
+ */
+export function filterInactiveHeroNodes(
+  selections: SelectedTalent[],
+  treeData: TalentTreeData,
+  activeHeroName: string | null
+): SelectedTalent[] {
+  const heroTrees = treeData.heroTrees ?? []
+  if (!heroTrees.length || !activeHeroName) return selections
+
+  // Collect all node IDs from inactive hero trees
+  const inactiveHeroIds = new Set<number>()
+  for (const tree of heroTrees) {
+    if (tree.name !== activeHeroName) {
+      for (const id of tree.nodeIds) inactiveHeroIds.add(id)
+    }
+  }
+  // Don't filter out nodes shared with the active tree
+  const activeTree = heroTrees.find((t) => t.name === activeHeroName)
+  if (activeTree) {
+    for (const id of activeTree.nodeIds) inactiveHeroIds.delete(id)
+  }
+
+  return selections.filter((s) => !inactiveHeroIds.has(s.nodeId))
+}
+
+/**
  * Detects which hero tree is active across one or more sets of raw (unmapped) selections.
  *
  * Primary method: finds the sub_tree_selection node that was chosen in the build

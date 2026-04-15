@@ -5,7 +5,7 @@ import type { Report, TalentTreeData, TalentNode, SelectedTalent } from '@/lib/t
 import { decodeTalentString } from '@/lib/talent-string'
 import { getSpecId } from '@/lib/spec-ids'
 import { LABELS } from '@/lib/report-labels'
-import { buildSlotMap, mapSelections, detectHeroTree } from '@/lib/talent-decode'
+import { buildSlotMap, mapSelections, detectHeroTree, filterInactiveHeroNodes } from '@/lib/talent-decode'
 
 interface Props {
   reports: Report[]
@@ -120,7 +120,10 @@ export function SpecTreeTab({ reports }: Props) {
 
   const selections = useMemo<SelectedTalent[][]>(() => {
     if (!treeData) return rawSelections
-    return rawSelections.map((sel) => mapSelections(sel, treeData))
+    return rawSelections.map((sel) => {
+      const mapped = mapSelections(sel, treeData)
+      return filterInactiveHeroNodes(mapped, treeData, activeHeroName)
+    })
   }, [rawSelections, treeData, activeHeroName])
 
   const { classNodes, specNodes, heroNodes } = useMemo(() => {
