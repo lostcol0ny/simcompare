@@ -177,8 +177,6 @@ export function SpecTreeTab({ reports }: Props) {
   const [treeData, setTreeData] = useState<TalentTreeData | null>(null)
   const [treeError, setTreeError] = useState<string | null>(null)
   const [diffsOnly, setDiffsOnly] = useState(true)
-  const [heroOverride, setHeroOverride] = useState<string | null>(null)
-
   const specs = [...new Set(reports.map((r) => r.specialization))]
   const isCrossSpec = specs.length > 1
 
@@ -187,12 +185,10 @@ export function SpecTreeTab({ reports }: Props) {
     [reports]
   )
 
-  const detectedHeroName = useMemo((): string | null => {
+  const activeHeroName = useMemo((): string | null => {
     if (!treeData) return null
     return detectHeroTree(rawSelections, treeData)
   }, [treeData, rawSelections])
-
-  const activeHeroName = heroOverride ?? detectedHeroName
 
   const selections = useMemo<SelectedTalent[][]>(() => {
     if (!treeData) return rawSelections
@@ -278,20 +274,6 @@ export function SpecTreeTab({ reports }: Props) {
           ))}
         </div>
         <div className="flex items-center gap-3 text-text-muted">
-          {(treeData.heroTrees ?? []).length > 1 && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-text-faint">Hero:</span>
-              <select
-                value={activeHeroName ?? ''}
-                onChange={(e) => setHeroOverride(e.target.value || null)}
-                className="bg-surface border border-border rounded px-1.5 py-0.5 text-xs text-text-primary"
-              >
-                {(treeData.heroTrees ?? []).map((t) => (
-                  <option key={t.name} value={t.name}>{t.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
           <span>{diffCount} difference{diffCount !== 1 ? 's' : ''}</span>
           <button
             onClick={() => setDiffsOnly((v) => !v)}

@@ -39,7 +39,7 @@ async function getAccessToken(): Promise<string> {
 }
 
 async function fetchIconUrl(endpoint: string, token: string): Promise<string> {
-  const res = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } })
+  const res = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` }, next: { revalidate: 86400 } })
   if (!res.ok) return ''
   const data = await res.json()
   return (
@@ -53,7 +53,7 @@ async function fetchIconUrl(endpoint: string, token: string): Promise<string> {
 async function fetchSpellIcons(
   spellIds: number[],
   token: string,
-  concurrency = 15
+  concurrency = 30
 ): Promise<Map<number, string>> {
   const map = new Map<number, string>()
 
@@ -117,7 +117,8 @@ export async function GET(
     treeUrlObj.searchParams.set('locale', 'en_US')
     const treeRes = await fetch(treeUrlObj.toString(), {
       headers: { Authorization: `Bearer ${token}` },
-          })
+      next: { revalidate: 86400 },
+    })
     if (!treeRes.ok) {
       return NextResponse.json(
         { error: `Blizzard talent tree fetch failed: ${treeRes.status}` },
