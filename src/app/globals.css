@@ -35,6 +35,7 @@
 }
 
 body {
-  background-color: var(--color-surface);
+  background-color: #050510;
   color: var(--color-text-primary);
+  position: relative;
 }
