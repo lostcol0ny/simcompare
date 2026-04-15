@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import {
   AreaChart, Area, LineChart, Line,
   XAxis, YAxis, CartesianGrid,
@@ -8,9 +9,9 @@ import {
 import type { Report } from '@/lib/types'
 import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
 import { BUILD_COLORS } from '@/lib/report-labels'
+import { WowheadTooltipLoader, WowheadSpellLink, refreshWowheadLinks } from '@/components/WowheadTooltip'
 
 const WINDOW = 10  // rolling average window in seconds
-const TOP_ABILITIES = 7
 const MIN_BUFF_UPTIME = 5  // minimum uptime % to show
 
 interface Props {
@@ -67,43 +68,44 @@ function formatResourceName(key: string): string {
 
 interface AbilityRow {
   name: string
+  spellId: number
   values: { dps: number; pct: number }[]  // one per report
 }
 
 function buildAbilityBreakdown(reports: Report[]): { rows: AbilityRow[]; deltas: AbilityDelta[] } {
   // Collect all top-level abilities across reports
-  const abilityMap = new Map<string, { dps: number; pct: number }[]>()
+  const abilityMap = new Map<string, { spellId: number; values: { dps: number; pct: number }[] }>()
 
   for (let ri = 0; ri < reports.length; ri++) {
     for (const ability of reports[ri].abilities) {
       if (!abilityMap.has(ability.spellName)) {
-        abilityMap.set(ability.spellName, reports.map(() => ({ dps: 0, pct: 0 })))
+        abilityMap.set(ability.spellName, {
+          spellId: ability.id,
+          values: reports.map(() => ({ dps: 0, pct: 0 })),
+        })
       }
       const entry = abilityMap.get(ability.spellName)!
-      entry[ri] = { dps: ability.dps, pct: ability.percentOfTotal }
+      entry.values[ri] = { dps: ability.dps, pct: ability.percentOfTotal }
+      // Prefer a real spell ID if we find one
+      if (ability.id > 0) entry.spellId = ability.id
     }
   }
 
-  // Sort by max DPS across builds, take top N
+  // Sort by max DPS across builds, show all abilities with DPS > 0
   const sorted = [...abilityMap.entries()]
-    .sort((a, b) => Math.max(...b[1].map((v) => v.dps)) - Math.max(...a[1].map((v) => v.dps)))
+    .filter(([, entry]) => entry.values.some((v) => v.dps > 0))
+    .sort((a, b) => Math.max(...b[1].values.map((v) => v.dps)) - Math.max(...a[1].values.map((v) => v.dps)))
 
-  const top = sorted.slice(0, TOP_ABILITIES)
-  const rows: AbilityRow[] = top.map(([name, values]) => ({ name, values }))
-
-  // "Other" row
-  const otherValues = reports.map((r, ri) => {
-    const topDps = top.reduce((sum, [, vals]) => sum + vals[ri].dps, 0)
-    const otherDps = r.dps - topDps
-    const otherPct = r.dps > 0 ? (otherDps / r.dps) * 100 : 0
-    return { dps: Math.max(0, otherDps), pct: Math.max(0, otherPct) }
-  })
-  rows.push({ name: 'Other', values: otherValues })
+  const rows: AbilityRow[] = sorted.map(([name, entry]) => ({
+    name,
+    spellId: entry.spellId,
+    values: entry.values,
+  }))
 
   // Delta calculation: top 3 by largest pct-point spread
-  const deltas: AbilityDelta[] = top
-    .map(([name, values]) => {
-      const pcts = values.map((v) => v.pct)
+  const deltas: AbilityDelta[] = sorted
+    .map(([name, entry]) => {
+      const pcts = entry.values.map((v) => v.pct)
       const spread = Math.max(...pcts) - Math.min(...pcts)
       return { name, values: pcts, spread }
     })
@@ -183,8 +185,15 @@ export function TimelineTab({ reports }: Props) {
   // Max DPS across all abilities/builds for bar scaling
   const maxAbilityDps = Math.max(...abilityRows.flatMap((r) => r.values.map((v) => v.dps)), 1)
 
+  // Refresh Wowhead links when data changes
+  useEffect(() => {
+    refreshWowheadLinks()
+  }, [reports])
+
   return (
-    <div className="p-4 space-y-8">
+    <div className="p-4 space-y-8" data-no-grid-click>
+      <WowheadTooltipLoader />
+
       {/* ── DPS over time ─────────────────────────────────────────────── */}
       <div>
         <p className="text-xs text-text-faint uppercase tracking-wide mb-4">
@@ -252,89 +261,85 @@ export function TimelineTab({ reports }: Props) {
       {/* ── DPS Breakdown ─────────────────────────────────────────────── */}
       <div>
         <p className="text-xs text-text-faint uppercase tracking-wide mb-4">
-          DPS Breakdown — Top Abilities
+          DPS Breakdown
         </p>
         <div className="bg-surface-raised border border-border rounded-lg p-4">
           <div className="space-y-3">
-            {abilityRows.map((row, rowIdx) => {
-              const isOther = row.name === 'Other'
-              return (
-                <div key={row.name} className="flex items-center gap-2.5">
-                  <div
-                    className="w-[120px] text-right text-xs flex-shrink-0 overflow-hidden whitespace-nowrap text-ellipsis"
-                    style={{ color: isOther ? '#64748b' : '#94a3b8' }}
-                  >
+            {abilityRows.map((row) => (
+              <div
+                key={row.name}
+                className="flex items-center gap-2.5 rounded-md px-1 -mx-1 transition-colors hover:bg-[rgba(124,58,237,0.06)]"
+              >
+                <div className="w-[120px] text-right text-xs text-text-secondary flex-shrink-0 overflow-hidden whitespace-nowrap text-ellipsis">
+                  <WowheadSpellLink spellId={row.spellId}>
                     {row.name}
-                  </div>
-                  <div className="flex-1 flex flex-col gap-1">
-                    {row.values.map((val, ri) => {
-                      const color = BUILD_COLORS[ri % BUILD_COLORS.length]
-                      const widthPct = maxAbilityDps > 0 ? (val.dps / maxAbilityDps) * 100 : 0
-                      return (
-                        <div key={ri} className="flex items-center gap-1.5">
-                          <span
-                            className="w-3.5 text-[9px] font-semibold flex-shrink-0"
-                            style={{ color: color.border }}
-                          >
-                            {LABELS[ri]}
-                          </span>
-                          <div className="flex-1 h-3.5 rounded bg-[rgba(30,30,46,0.5)] overflow-hidden">
-                            <div
-                              className="h-full rounded flex items-center pl-1.5"
-                              style={{
-                                width: `${Math.max(widthPct, 1)}%`,
-                                background: `linear-gradient(90deg, ${color.fill}, ${color.border})`,
-                                opacity: isOther ? 0.5 : 1,
-                              }}
-                            >
-                              {widthPct > 15 && (
-                                <span className="text-[9px] text-white/70">
-                                  {val.dps >= 1000 ? `${(val.dps / 1000).toFixed(1)}k` : Math.round(val.dps)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <span className="w-10 text-right text-[10px] text-text-faint flex-shrink-0">
-                            {val.pct.toFixed(1)}%
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
+                  </WowheadSpellLink>
                 </div>
-              )
-            })}
-          </div>
-
-          {deltas.length > 0 && (
-            <>
-              <div className="border-t border-border mt-4 pt-3">
-                <p className="text-[10px] text-text-faint uppercase tracking-wider mb-2">Biggest Differences</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {deltas.map((d) => {
-                    const maxPct = Math.max(...d.values)
+                <div className="flex-1 flex flex-col gap-1">
+                  {row.values.map((val, ri) => {
+                    const color = BUILD_COLORS[ri % BUILD_COLORS.length]
+                    const widthPct = maxAbilityDps > 0 ? (val.dps / maxAbilityDps) * 100 : 0
                     return (
-                      <div key={d.name} className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-2.5 py-2 text-xs">
-                        <div className="text-text-secondary mb-1">{d.name}</div>
-                        <div className="flex gap-2 text-[10px]">
-                          {d.values.map((pct, ri) => (
-                            <span
-                              key={ri}
-                              style={{ color: pct === maxPct ? '#4ade80' : '#64748b' }}
-                            >
-                              {LABELS[ri]}: {pct.toFixed(1)}%
-                              {pct === maxPct && d.spread > 0 && (
-                                <span className="text-positive"> (+{d.spread.toFixed(1)})</span>
-                              )}
-                            </span>
-                          ))}
+                      <div key={ri} className="flex items-center gap-1.5">
+                        <span
+                          className="w-3.5 text-[9px] font-semibold flex-shrink-0"
+                          style={{ color: color.border }}
+                        >
+                          {LABELS[ri]}
+                        </span>
+                        <div className="flex-1 h-3.5 rounded bg-[rgba(30,30,46,0.5)] overflow-hidden">
+                          <div
+                            className="h-full rounded flex items-center pl-1.5 transition-all"
+                            style={{
+                              width: `${Math.max(widthPct, 1)}%`,
+                              background: `linear-gradient(90deg, ${color.fill}, ${color.border})`,
+                            }}
+                          >
+                            {widthPct > 15 && (
+                              <span className="text-[9px] text-white/70">
+                                {val.dps >= 1000 ? `${(val.dps / 1000).toFixed(1)}k` : Math.round(val.dps)}
+                              </span>
+                            )}
+                          </div>
                         </div>
+                        <span className="w-10 text-right text-[10px] text-text-faint flex-shrink-0">
+                          {val.pct.toFixed(1)}%
+                        </span>
                       </div>
                     )
                   })}
                 </div>
               </div>
-            </>
+            ))}
+          </div>
+
+          {deltas.length > 0 && (
+            <div className="border-t border-border mt-4 pt-3">
+              <p className="text-[10px] text-text-faint uppercase tracking-wider mb-2">Biggest Differences</p>
+              <div className="grid grid-cols-3 gap-2">
+                {deltas.map((d) => {
+                  const maxPct = Math.max(...d.values)
+                  return (
+                    <div key={d.name} className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-2.5 py-2 text-xs">
+                      <div className="text-text-secondary mb-1">{d.name}</div>
+                      <div className="flex gap-2 text-[10px]">
+                        {d.values.map((pct, ri) => (
+                          <span
+                            key={ri}
+                            style={{ color: pct === maxPct ? '#4ade80' : '#64748b' }}
+                          >
+                            {LABELS[ri]}: {pct.toFixed(1)}%
+                            {pct === maxPct && d.spread > 0 && (
+                              <span className="text-positive"> (+{d.spread.toFixed(1)})</span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -348,7 +353,10 @@ export function TimelineTab({ reports }: Props) {
           <div className="bg-surface-raised border border-border rounded-lg p-4">
             <div className="space-y-1.5">
               {buffRows.map((row) => (
-                <div key={row.name} className="flex items-center gap-2.5">
+                <div
+                  key={row.name}
+                  className="flex items-center gap-2.5 rounded-md px-1 -mx-1 py-0.5 transition-colors hover:bg-[rgba(124,58,237,0.06)]"
+                >
                   <div className="w-[140px] text-right text-xs text-text-secondary flex-shrink-0 overflow-hidden whitespace-nowrap text-ellipsis">
                     {row.name}
                   </div>
@@ -358,7 +366,7 @@ export function TimelineTab({ reports }: Props) {
                       return (
                         <div key={ri} className="h-2.5 rounded bg-[rgba(30,30,46,0.5)] overflow-hidden">
                           <div
-                            className="h-full rounded"
+                            className="h-full rounded transition-all"
                             style={{
                               width: `${uptime}%`,
                               background: `linear-gradient(90deg, ${color.fill}, ${color.border})`,
@@ -386,7 +394,7 @@ export function TimelineTab({ reports }: Props) {
               ))}
             </div>
             <p className="text-[10px] text-text-faint italic text-center mt-3">
-              Showing buffs with &ge;5% uptime in at least one build &middot; sorted by max uptime
+              Showing buffs with &ge;{MIN_BUFF_UPTIME}% uptime in at least one build &middot; sorted by max uptime
             </p>
           </div>
         </div>
