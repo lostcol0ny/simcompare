@@ -68,7 +68,7 @@ export function CompareLayout({ reports }: Props) {
   const maxWidth = CONTENT_MAX_WIDTH[reports.length] ?? 'max-w-6xl'
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" data-no-grid-click>
       <StickyHeader reports={namedReports} />
       <TabNav active={activeTab} onChange={setActiveTab} />
       <div className="flex-1">
