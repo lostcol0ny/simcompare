@@ -5,11 +5,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   ErrorBar, LabelList, Cell, ResponsiveContainer, Tooltip,
 } from 'recharts'
-import type { Report, TalentTreeData, SelectedTalent } from '@/lib/types'
+import type { Report, TalentTreeData } from '@/lib/types'
 import { getClassColor } from '@/lib/wow-icons'
 import { getSpecId } from '@/lib/spec-ids'
 import { decodeTalentString } from '@/lib/talent-string'
 import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
+import { buildSlotMap, detectHeroTree } from '@/lib/talent-decode'
 
 interface Props {
   reports: Report[]
@@ -50,36 +51,47 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
     })
   }, [reports])
 
-  function getHeroSpecIcon(report: Report): string {
+  function getHeroInfo(report: Report): { name: string; iconUrl: string } {
     const specId = getSpecId(report.specialization)
-    if (!specId) return ''
+    if (!specId) return { name: '', iconUrl: '' }
     const treeData = treesBySpec.get(specId)
-    if (!treeData?.heroNodeIds?.length) return ''
+    if (!treeData?.heroTrees?.length) return { name: '', iconUrl: '' }
 
-    let rawSelections: SelectedTalent[]
+    let rawSelections
     try {
       rawSelections = decodeTalentString(report.talentString)
     } catch {
-      return ''
+      return { name: '', iconUrl: '' }
     }
 
-    const sortedNodes = [...treeData.nodes].sort((a, b) => a.id - b.id)
-    const selections = rawSelections
-      .filter((s) => s.nodeId < sortedNodes.length)
-      .map((s) => ({ nodeId: sortedNodes[s.nodeId].id, rank: s.rank }))
+    const activeHeroName = detectHeroTree([rawSelections], treeData)
+    if (!activeHeroName) return { name: '', iconUrl: '' }
 
-    const heroIdSet = new Set(treeData.heroNodeIds)
-    const selectedHeroNodeIds = new Set(
-      selections.filter((s) => heroIdSet.has(s.nodeId) && s.rank > 0).map((s) => s.nodeId)
+    const activeTree = treeData.heroTrees.find((t) => t.name === activeHeroName)
+    if (!activeTree) return { name: activeHeroName, iconUrl: '' }
+
+    const nodeById = new Map(treeData.nodes.map((n) => [n.id, n]))
+    const heroNodes = activeTree.nodeIds
+      .filter((id) => nodeById.has(id))
+      .map((id) => nodeById.get(id)!)
+
+    // Primary: node whose name matches the hero tree name (the spec identity talent)
+    const identityNode = heroNodes.find(
+      (n) => n.name.toLowerCase() === activeHeroName.toLowerCase()
     )
-    if (selectedHeroNodeIds.size === 0) return ''
+    if (identityNode?.iconUrl) return { name: activeHeroName, iconUrl: identityNode.iconUrl }
 
-    // Pick the topmost selected hero node (lowest row) as the hero spec entry
-    const entryNode = treeData.nodes
-      .filter((n) => selectedHeroNodeIds.has(n.id))
-      .sort((a, b) => a.row - b.row || a.col - b.col)[0]
-
-    return entryNode?.iconUrl ?? ''
+    // Fallback: capstone node (highest row) of the active hero tree
+    const slotIds = buildSlotMap(treeData)
+    const selectedIds = new Set(
+      rawSelections
+        .filter((s) => s.nodeId < slotIds.length && s.rank > 0)
+        .map((s) => slotIds[s.nodeId])
+    )
+    const capstone = heroNodes
+      .filter((n) => selectedIds.has(n.id))
+      .sort((a, b) => b.row - a.row || b.col - a.col)[0]
+    return { name: activeHeroName, iconUrl: capstone?.iconUrl ?? '' }
   }
 
   function copyTalents(idx: number, str: string) {
@@ -106,7 +118,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
         {reports.map((r, i) => {
           const specId = getSpecId(r.specialization)
           const iconUrl = (specId && treesBySpec.get(specId)?.specIconUrl) || ''
-          const heroIconUrl = getHeroSpecIcon(r)
+          const { name: heroName, iconUrl: heroIconUrl } = getHeroInfo(r)
           const classColor = getClassColor(r.specialization)
           const isLeader = i === leadIdx && reports.length > 1
           return (
@@ -187,7 +199,9 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                       <span className="text-text-faint opacity-0 group-hover:opacity-100 text-xs transition-opacity">✎</span>
                     </button>
                   )}
-                  <p className="text-xs text-text-muted truncate">{r.specialization}</p>
+                  <p className="text-xs text-text-muted truncate">
+                    {heroName ? `${heroName} ${r.specialization}` : r.specialization}
+                  </p>
                 </div>
               </div>
 

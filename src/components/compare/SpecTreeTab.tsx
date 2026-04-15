@@ -5,63 +5,12 @@ import type { Report, TalentTreeData, TalentNode, SelectedTalent } from '@/lib/t
 import { decodeTalentString } from '@/lib/talent-string'
 import { getSpecId } from '@/lib/spec-ids'
 import { LABELS } from '@/lib/report-labels'
+import { buildSlotMap, mapSelections, detectHeroTree } from '@/lib/talent-decode'
 
 interface Props {
   reports: Report[]
 }
 
-// ── Slot mapping ──────────────────────────────────────────────────────────────
-//
-// The encoding order is [class+spec nodes, ascending by ID] then [hero tree nodes, ascending by ID].
-// These are SEPARATE sections — NOT one combined ascending sort — because hero node IDs
-// (94000–109000 for Warlock) overlap with spec node IDs (99000–110000).
-// A single global sort would interleave them, decoding spec bits as hero nodes and vice versa.
-//
-// We use heroNodeIds (available from the API) to identify which nodes belong to the hero
-// section, then sort each section independently.
-
-function buildSlotMap(treeData: TalentTreeData, heroTreeNodeIds: number[]): number[] {
-  const allHeroIdSet = new Set(treeData.heroNodeIds ?? [])
-  const nonHeroIds = treeData.nodes
-    .map((n) => n.id)
-    .filter((id) => !allHeroIdSet.has(id))
-    .sort((a, b) => a - b)
-  const heroIds = [...heroTreeNodeIds].sort((a, b) => a - b)
-  return [...nonHeroIds, ...heroIds]
-}
-
-function mapSelections(rawSel: SelectedTalent[], treeData: TalentTreeData, heroTreeNodeIds: number[]): SelectedTalent[] {
-  const slotIds = buildSlotMap(treeData, heroTreeNodeIds)
-  return rawSel
-    .filter((s) => s.nodeId < slotIds.length)
-    .map((s) => ({ nodeId: slotIds[s.nodeId], rank: s.rank }))
-}
-
-// Try each hero tree against rawSelections independently (no dependency on mapped selections).
-// This avoids the circular: selections → detectedHero → selections.
-function detectHeroTree(rawSelections: SelectedTalent[][], treeData: TalentTreeData): string | null {
-  const heroTrees = treeData.heroTrees ?? []
-  if (!heroTrees.length) return null
-  const allHeroIdSet = new Set(treeData.heroNodeIds ?? [])
-  const nonHeroIds = treeData.nodes
-    .map((n) => n.id)
-    .filter((id) => !allHeroIdSet.has(id))
-    .sort((a, b) => a - b)
-
-  let bestTree = heroTrees[0]
-  let bestScore = -1
-  for (const tree of heroTrees) {
-    const heroIds = [...tree.nodeIds].sort((a, b) => a - b)
-    const slotIds = [...nonHeroIds, ...heroIds]
-    const treeIdSet = new Set(tree.nodeIds)
-    let score = 0
-    for (const sel of rawSelections) {
-      score += sel.filter((s) => s.nodeId < slotIds.length && treeIdSet.has(slotIds[s.nodeId])).length
-    }
-    if (score > bestScore) { bestScore = score; bestTree = tree }
-  }
-  return bestTree?.name ?? null
-}
 
 // ── Section list component ────────────────────────────────────────────────────
 
@@ -171,8 +120,7 @@ export function SpecTreeTab({ reports }: Props) {
 
   const selections = useMemo<SelectedTalent[][]>(() => {
     if (!treeData) return rawSelections
-    const activeHeroTree = (treeData.heroTrees ?? []).find((t) => t.name === activeHeroName)
-    return rawSelections.map((sel) => mapSelections(sel, treeData, activeHeroTree?.nodeIds ?? []))
+    return rawSelections.map((sel) => mapSelections(sel, treeData))
   }, [rawSelections, treeData, activeHeroName])
 
   const { classNodes, specNodes, heroNodes } = useMemo(() => {
@@ -187,8 +135,8 @@ export function SpecTreeTab({ reports }: Props) {
     const heroNodes: TalentNode[] = []
     for (const node of treeData.nodes) {
       if (classIdSet.has(node.id)) classNodes.push(node)
-      else if (specIdSet.has(node.id)) specNodes.push(node)
       else if (heroIdSet.has(node.id)) heroNodes.push(node)
+      else if (specIdSet.has(node.id)) specNodes.push(node)
     }
     return { classNodes, specNodes, heroNodes }
   }, [treeData, activeHeroName])

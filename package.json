@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "generate:simc-nodes": "node scripts/generate-simc-nodes.mjs"
   },
   "dependencies": {
     "next": "16.2.3",

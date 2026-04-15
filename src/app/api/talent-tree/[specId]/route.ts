@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { TalentTreeData, TalentNode, HeroTree } from '@/lib/types'
+import { getSiblingSpecIds, getSimcClassId } from '@/lib/spec-ids'
+import simcSlotMaps from '@/data/simc-slot-maps.json'
 
 const TOKEN_URL = 'https://oauth.battle.net/token'
 const API_BASE = 'https://us.api.blizzard.com'
@@ -36,13 +38,8 @@ async function getAccessToken(): Promise<string> {
   return cachedToken.value
 }
 
-async function fetchIconUrl(
-  endpoint: string,
-  token: string
-): Promise<string> {
-  const res = await fetch(endpoint, {
-    headers: { Authorization: `Bearer ${token}` },
-      })
+async function fetchIconUrl(endpoint: string, token: string): Promise<string> {
+  const res = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } })
   if (!res.ok) return ''
   const data = await res.json()
   return (
@@ -131,31 +128,137 @@ export async function GET(
     const raw = await treeRes.json()
     const { nodes, classNodeIds, specNodeIds, heroNodeIds, heroTrees } = parseBlizzardTree(raw)
 
-    // Step 3: fetch spec icon + batch-fetch spell icons concurrently
+    // Step 3: fetch spec icon, spell icons, and sibling-spec node IDs concurrently.
+    // Sibling spec nodes occupy slots in the talent string encoding (the encoder
+    // iterates ALL specs of the class in ascending node-ID order) but are always
+    // unselected in a build for this spec. We need their IDs to build an accurate
+    // slot map for decoding.
     const uniqueSpellIds = [
       ...new Set(nodes.map((n) => n.spellId).filter((id) => id > 0)),
     ]
-    const [specIconUrl, iconMap] = await Promise.all([
+
+    // Reuse the tree ID from the URL we already fetched (e.g. /talent-tree/1141/...)
+    const treeIdMatch = treeUrlObj.pathname.match(/\/talent-tree\/(\d+)\//)
+    const treeId = treeIdMatch?.[1]
+
+    interface SiblingTreeData {
+      specNodeIds: number[]
+      heroNodeIds: number[]
+      herosByTree: { name: string; nodeIds: number[] }[]
+    }
+
+    async function fetchSiblingTreeData(sibSpecId: number): Promise<SiblingTreeData> {
+      if (!treeId) return { specNodeIds: [], heroNodeIds: [], herosByTree: [] }
+      const url = new URL(`${API_BASE}/data/wow/talent-tree/${treeId}/playable-specialization/${sibSpecId}`)
+      url.searchParams.set('namespace', 'static-us')
+      url.searchParams.set('locale', 'en_US')
+      const res = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${token}` },
+        next: { revalidate: 86400 },
+      })
+      if (!res.ok) return { specNodeIds: [], heroNodeIds: [], herosByTree: [] }
+      const data = await res.json()
+      const sibSpecNodeIds = ((data.spec_talent_nodes ?? []) as BlizzardNode[]).map((n) => n.id)
+      const herosByTree: { name: string; nodeIds: number[] }[] = []
+      const sibHeroNodeIds: number[] = []
+      for (const tree of (data.hero_talent_trees ?? []) as Array<{ name: string; hero_talent_nodes?: BlizzardNode[] }>) {
+        const nodeIds = (tree.hero_talent_nodes ?? []).map((n) => n.id)
+        herosByTree.push({ name: tree.name, nodeIds })
+        for (const id of nodeIds) sibHeroNodeIds.push(id)
+      }
+      return { specNodeIds: sibSpecNodeIds, heroNodeIds: sibHeroNodeIds, herosByTree }
+    }
+
+    const siblingSpecIds = getSiblingSpecIds(specId)
+    const [specIconUrl, iconMap, ...siblingResults] = await Promise.all([
       fetchIconUrl(
         `${API_BASE}/data/wow/media/playable-specialization/${specId}?namespace=static-us`,
         token
       ),
       fetchSpellIcons(uniqueSpellIds, token),
+      ...siblingSpecIds.map(fetchSiblingTreeData),
     ])
+
+    const siblingData = siblingResults as SiblingTreeData[]
+
+    const simcClassId = getSimcClassId(specId)
+    const simc = simcSlotMaps as {
+      slotMaps: Record<string, number[]>
+      heroTrees: Record<string, Record<string, number[]>>
+    }
+
+    // Slot map: use SimC's precomputed node ID list (sorted ascending by id_node,
+    // all tree types, all class specs) — matches the game encoder exactly.
+    const simcSlotNodeIds: number[] = simcClassId
+      ? (simc.slotMaps[String(simcClassId)] ?? [])
+      : []
+
+    const siblingSpecNodeIds = [...new Set(siblingData.flatMap((s) => s.specNodeIds))]
+    const allSiblingHeroNodeIds = [...new Set(siblingData.flatMap((s) => s.heroNodeIds))]
+    const combinedHeroNodeIds = [...new Set([...heroNodeIds, ...allSiblingHeroNodeIds])]
+
+    const blizzardDerivedIds = [...new Set([
+      ...classNodeIds, ...specNodeIds, ...heroNodeIds,
+      ...siblingSpecNodeIds, ...allSiblingHeroNodeIds,
+    ])].sort((a, b) => a - b)
+
+    const allSlotNodeIds = simcSlotNodeIds.length > 0 ? simcSlotNodeIds : blizzardDerivedIds
+
+    // Hero tree node lists: replace Blizzard API's (often incomplete) node lists
+    // with SimC's complete lists, matched by hero tree ID (id_sub_tree in SimC ==
+    // hero_talent_trees[].id from Blizzard API — both come from the same DBC data).
+    // Falls back to the Blizzard-derived list if SimC has no data for that tree ID.
+    const simcHeroTreesForClass = simcClassId ? (simc.heroTrees[String(simcClassId)] ?? {}) : {}
+    for (const tree of heroTrees) {
+      if (tree.id !== undefined) {
+        const simcNodeIds = simcHeroTreesForClass[String(tree.id)]
+        if (simcNodeIds && simcNodeIds.length > 0) {
+          tree.nodeIds = simcNodeIds
+          continue
+        }
+      }
+      // ID match failed — fall back to sibling-merged Blizzard data
+      for (const s of siblingData) {
+        for (const { name, nodeIds } of s.herosByTree) {
+          if (name === tree.name) {
+            for (const id of nodeIds) {
+              if (!tree.nodeIds.includes(id)) tree.nodeIds.push(id)
+            }
+          }
+        }
+      }
+    }
 
     const nodesWithIcons: TalentNode[] = nodes.map((n) => ({
       ...n,
       iconUrl: iconMap.get(n.spellId) ?? '',
     }))
 
+    // Selection nodes for this class: maps nodeId → { choiceIndex → subTreeId }
+    // Convert string keys from JSON to numeric keys for type safety
+    const rawSelectionNodes = simcClassId
+      ? ((simc as { selectionNodes?: Record<string, Record<string, Record<string, number>>> })
+          .selectionNodes?.[String(simcClassId)] ?? {})
+      : {}
+    const selectionNodes: Record<number, Record<number, number>> = {}
+    for (const [nodeId, choices] of Object.entries(rawSelectionNodes)) {
+      selectionNodes[Number(nodeId)] = {}
+      for (const [choiceIdx, subTreeId] of Object.entries(choices)) {
+        selectionNodes[Number(nodeId)][Number(choiceIdx)] = subTreeId
+      }
+    }
+
     const result: TalentTreeData = {
       specId,
       nodes: nodesWithIcons,
       classNodeIds,
       specNodeIds,
-      heroNodeIds,
+      siblingSpecNodeIds,
+      heroNodeIds: combinedHeroNodeIds,
       heroTrees,
       specIconUrl,
+      allSlotNodeIds,
+      selectionNodes,
     }
     return NextResponse.json(result, {
       // Cache at CDN for 24h; browsers revalidate so a new deployment is never stale
@@ -190,8 +293,10 @@ function parseBlizzardTree(raw: unknown): { nodes: TalentNode[], classNodeIds: n
   const heroBlizzardNodes = [...heroNodeMap.values()]
   const heroNodeIds = heroBlizzardNodes.map((n) => n.id)
 
-  // Build per-tree node ID lists for hero tree filtering in the UI
+  // Build per-tree node ID lists — include the Blizzard tree ID so we can
+  // match against SimC's id_sub_tree values for more complete node lists.
   const heroTrees: HeroTree[] = rawHeroTrees.map((tree) => ({
+    id: tree.id,
     name: tree.name,
     nodeIds: (tree.hero_talent_nodes ?? []).map((n) => n.id),
   }))

@@ -146,17 +146,33 @@ export interface ParsedAbility {
 export interface TalentTreeData {
   specId: number
   nodes: TalentNode[]
-  classNodeIds: number[]  // IDs of class talent nodes
-  specNodeIds: number[]   // IDs of spec talent nodes
-  heroNodeIds: number[]   // IDs of hero talent nodes (all hero trees, deduplicated)
-  heroTrees: HeroTree[]   // per-hero-spec node membership (for filtering)
-  specIconUrl: string     // Icon URL from Blizzard spec media API
+  classNodeIds: number[]       // IDs of class talent nodes
+  specNodeIds: number[]        // IDs of spec talent nodes (active spec only)
+  siblingSpecNodeIds: number[] // IDs of spec nodes from sibling specs not already in specNodeIds
+  heroNodeIds: number[]        // IDs of hero talent nodes (all hero trees, deduplicated)
+  heroTrees: HeroTree[]        // per-hero-spec node membership (for filtering)
+  specIconUrl: string          // Icon URL from Blizzard spec media API
+  /**
+   * The authoritative slot map: every node ID for the entire class (class tree +
+   * all specs' spec trees + all hero trees), deduplicated and sorted ascending.
+   * This matches how the game encoder orders nodes when writing the talent string
+   * bitstream. Use this — not the individual ID arrays — to decode talent strings.
+   */
+  allSlotNodeIds: number[]
+  /**
+   * Sub-tree selection nodes: maps nodeId → { choiceIndex → subTreeId }.
+   * These are the binary choice nodes that determine which hero spec is active.
+   * Used by detectHeroTree() for deterministic hero spec detection.
+   */
+  selectionNodes?: Record<number, Record<number, number>>
 }
 
 /** One hero talent spec (e.g. "Diabolist") and the node IDs it owns */
 export interface HeroTree {
   name: string
   nodeIds: number[]
+  /** Blizzard/SimC internal ID for this hero tree — used to match SimC node data */
+  id?: number
 }
 
 export interface TalentNode {
