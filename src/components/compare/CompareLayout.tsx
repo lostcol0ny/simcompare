@@ -72,13 +72,25 @@ export function CompareLayout({ reports }: Props) {
       <StickyHeader reports={namedReports} />
       <TabNav active={activeTab} onChange={setActiveTab} />
       <div className="flex-1">
-        <div className={`mx-auto w-full ${maxWidth}`}>
-          {activeTab === 'summary' && <SummaryTab reports={namedReports} onRename={handleRename} onRemove={handleRemoveReport} />}
-          {activeTab === 'abilities' && <AbilitiesTab reports={namedReports} />}
-          {activeTab === 'talents' && <SpecTreeTab reports={namedReports} />}
-          {activeTab === 'stats' && <StatsTab reports={namedReports} />}
-          {activeTab === 'timeline' && <TimelineTab reports={namedReports} />}
-          {activeTab === 'buffs' && <BuffsTab reports={namedReports} />}
+        <div className={`mx-auto w-full ${maxWidth} tab-viewport`}>
+          <div className={`tab-panel ${activeTab === 'summary' ? 'tab-panel-active' : ''}`}>
+            <SummaryTab reports={namedReports} onRename={handleRename} onRemove={handleRemoveReport} />
+          </div>
+          <div className={`tab-panel ${activeTab === 'abilities' ? 'tab-panel-active' : ''}`}>
+            <AbilitiesTab reports={namedReports} />
+          </div>
+          <div className={`tab-panel ${activeTab === 'talents' ? 'tab-panel-active' : ''}`}>
+            <SpecTreeTab reports={namedReports} />
+          </div>
+          <div className={`tab-panel ${activeTab === 'stats' ? 'tab-panel-active' : ''}`}>
+            <StatsTab reports={namedReports} />
+          </div>
+          <div className={`tab-panel ${activeTab === 'timeline' ? 'tab-panel-active' : ''}`}>
+            <TimelineTab reports={namedReports} />
+          </div>
+          <div className={`tab-panel ${activeTab === 'buffs' ? 'tab-panel-active' : ''}`}>
+            <BuffsTab reports={namedReports} />
+          </div>
         </div>
       </div>
     </div>
