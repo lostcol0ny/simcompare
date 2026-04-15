@@ -5,12 +5,31 @@ import type { Report, TalentTreeData, TalentNode, SelectedTalent } from '@/lib/t
 import { decodeTalentString } from '@/lib/talent-string'
 import { getSpecId } from '@/lib/spec-ids'
 import { LABELS } from '@/lib/report-labels'
+import { BUILD_COLORS } from '@/lib/report-labels'
 import { buildSlotMap, mapSelections, detectHeroTree, filterInactiveHeroNodes } from '@/lib/talent-decode'
+import { WowheadTooltipLoader, WowheadSpellLink, refreshWowheadLinks } from '@/components/WowheadTooltip'
 
 interface Props {
   reports: Report[]
 }
 
+// ── Diff cell ────────────────────────────────────────────────────────────────
+
+function DiffCell({ selected, colorIndex }: { selected: boolean; colorIndex: number }) {
+  const color = BUILD_COLORS[colorIndex % BUILD_COLORS.length]
+  return (
+    <td className="px-1 py-1.5">
+      <div
+        className="w-[30px] h-[22px] rounded mx-auto"
+        style={
+          selected
+            ? { background: color.fill, border: `1px solid ${color.border}` }
+            : { border: '1px solid #334155' }
+        }
+      />
+    </td>
+  )
+}
 
 // ── Section list component ────────────────────────────────────────────────────
 
@@ -22,8 +41,17 @@ interface SectionProps {
   diffsOnly: boolean
 }
 
+interface RowData {
+  key: string
+  name: string
+  spellId: number
+  iconUrl: string
+  isChoice: boolean
+  picked: boolean[]
+}
+
 function SectionList({ title, nodes, selections, labels, diffsOnly }: SectionProps) {
-  // Deduplicate nodes by ID (same node can appear in multiple API arrays)
+  // Deduplicate nodes by ID
   const seen = new Set<number>()
   const uniqueNodes = nodes.filter((n) => {
     if (seen.has(n.id)) return false
@@ -31,62 +59,112 @@ function SectionList({ title, nodes, selections, labels, diffsOnly }: SectionPro
     return true
   })
 
-  const rows = uniqueNodes
-    .map((n) => ({
-      node: n,
-      picked: selections.map((sel) => sel.some((s) => s.nodeId === n.id)),
-      choiceIndices: selections.map((sel) => sel.find((s) => s.nodeId === n.id)?.choiceIndex),
-    }))
-    .filter((r) => r.picked.some(Boolean))
-    .filter((r) => !diffsOnly || !r.picked.every(Boolean))
-    .sort((a, b) => a.node.row - b.node.row || a.node.col - b.node.col)
+  // Build rows — split choice nodes into separate rows per option
+  const rows: RowData[] = []
+  for (const node of uniqueNodes) {
+    const perBuild = selections.map((sel) => sel.find((s) => s.nodeId === node.id))
+    const anyPicked = perBuild.some(Boolean)
+    if (!anyPicked) continue
 
-  if (rows.length === 0) return null
+    if (node.choiceNames && node.choiceNames.length > 1) {
+      // Check if different builds chose different options
+      const choiceIndices = perBuild.map((s) => s?.choiceIndex)
+      const uniqueChoices = new Set(choiceIndices.filter((c) => c !== undefined))
+
+      if (uniqueChoices.size > 1) {
+        // Split: one row per choice option
+        for (let ci = 0; ci < node.choiceNames.length; ci++) {
+          const picked = perBuild.map((s) => s !== undefined && s.choiceIndex === ci)
+          if (!picked.some(Boolean)) continue
+          rows.push({
+            key: `${node.id}-choice-${ci}`,
+            name: node.choiceNames[ci],
+            spellId: node.spellId,
+            iconUrl: node.iconUrl,
+            isChoice: true,
+            picked,
+          })
+        }
+        continue
+      }
+    }
+
+    // Normal node or choice node where all builds picked the same option
+    const displayName = node.choiceNames && perBuild.some(Boolean)
+      ? (node.choiceNames[perBuild.find(Boolean)?.choiceIndex ?? 0] ?? node.name)
+      : node.name
+
+    rows.push({
+      key: String(node.id),
+      name: displayName,
+      spellId: node.spellId,
+      iconUrl: node.iconUrl,
+      isChoice: false,
+      picked: perBuild.map((s) => s !== undefined),
+    })
+  }
+
+  const filteredRows = rows
+    .filter((r) => !diffsOnly || !r.picked.every(Boolean))
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  if (filteredRows.length === 0) {
+    if (!diffsOnly) return null
+    return (
+      <div>
+        <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-text-faint bg-surface/50 border-b border-border">
+          {title}
+        </div>
+        <div className="px-4 py-3 text-xs text-text-faint italic text-center">
+          No differences in {title.toLowerCase()} talents
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>
-      <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-text-faint bg-surface border-b border-border">
+      <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-text-faint bg-surface/50 border-b border-border">
         {title}
       </div>
       <table className="w-full text-xs border-collapse">
         <thead>
           <tr className="border-b border-border">
             <th className="px-3 py-1.5 text-left font-normal text-text-faint">Talent</th>
-            {labels.map((l) => (
-              <th key={l} className="px-3 py-1.5 text-center font-normal text-text-faint w-16">{l}</th>
+            {labels.map((l, i) => (
+              <th
+                key={l}
+                className="px-1 py-1.5 text-center font-normal w-[42px]"
+                style={{ color: BUILD_COLORS[i % BUILD_COLORS.length].border }}
+              >
+                {l}
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {rows.map(({ node, picked, choiceIndices }) => {
-            const inAll = picked.every(Boolean)
-            const bgClass = inAll
-              ? 'bg-[#1a1030]'
-              : picked[0]
-              ? 'bg-[#0d2010]'
-              : 'bg-[#200d0d]'
-            // For choice nodes, show the name chosen by the first report that picked it
-            const firstPickIdx = picked.findIndex(Boolean)
-            const displayChoiceIdx = firstPickIdx !== -1 ? choiceIndices[firstPickIdx] : undefined
-            const displayName = node.choiceNames && displayChoiceIdx !== undefined
-              ? (node.choiceNames[displayChoiceIdx] ?? node.name)
-              : node.name
-            return (
-              <tr key={node.id} className={`border-b border-border/30 ${bgClass}`}>
-                <td className="px-3 py-1.5 flex items-center gap-2 text-text-primary">
-                  {node.iconUrl && (
-                    <img src={node.iconUrl} alt="" className="w-5 h-5 rounded flex-shrink-0" />
+          {filteredRows.map((row) => (
+            <tr key={row.key} className="border-b border-border/30">
+              <td className="px-3 py-1.5">
+                <span className="inline-flex items-center gap-2 text-text-primary">
+                  {row.iconUrl && (
+                    <img src={row.iconUrl} alt="" className="w-[22px] h-[22px] rounded flex-shrink-0" />
                   )}
-                  {displayName}
-                </td>
-                {picked.map((p, i) => (
-                  <td key={i} className="px-3 py-1.5 text-center">
-                    {p ? <span className="text-positive font-bold">✓</span> : <span className="text-text-faint">–</span>}
-                  </td>
-                ))}
-              </tr>
-            )
-          })}
+                  <WowheadSpellLink spellId={row.spellId}>
+                    {row.name}
+                  </WowheadSpellLink>
+                  {row.isChoice && (
+                    <span className="text-[9px] text-text-faint bg-surface-overlay px-1.5 py-0.5 rounded">
+                      choice
+                    </span>
+                  )}
+                </span>
+              </td>
+              {row.picked.map((p, i) => (
+                <DiffCell key={i} selected={p} colorIndex={i} />
+              ))}
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
@@ -99,7 +177,6 @@ export function SpecTreeTab({ reports }: Props) {
   const [treeData, setTreeData] = useState<TalentTreeData | null>(null)
   const [treeError, setTreeError] = useState<string | null>(null)
   const [diffsOnly, setDiffsOnly] = useState(true)
-  // Manual hero-spec override: null = auto-detect
   const [heroOverride, setHeroOverride] = useState<string | null>(null)
 
   const specs = [...new Set(reports.map((r) => r.specialization))]
@@ -110,7 +187,6 @@ export function SpecTreeTab({ reports }: Props) {
     [reports]
   )
 
-  // Detect hero tree from raw (unmapped) selections — independent of final selections
   const detectedHeroName = useMemo((): string | null => {
     if (!treeData) return null
     return detectHeroTree(rawSelections, treeData)
@@ -150,6 +226,11 @@ export function SpecTreeTab({ reports }: Props) {
     return [...allIds].filter((id) => !selections.every((sel) => sel.some((s) => s.nodeId === id))).length
   }, [selections, treeData])
 
+  // Refresh Wowhead links when selections or tree data change
+  useEffect(() => {
+    if (treeData) refreshWowheadLinks()
+  }, [treeData, selections])
+
   useEffect(() => {
     if (isCrossSpec) return
     const specId = getSpecId(reports[0].specialization)
@@ -177,19 +258,26 @@ export function SpecTreeTab({ reports }: Props) {
   const labels = LABELS.slice(0, reports.length)
 
   return (
-    <div>
+    <div data-no-grid-click>
+      <WowheadTooltipLoader />
+
       {/* Controls bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-surface-raised border-b border-border text-xs flex-wrap gap-2">
+      <div className="flex items-center justify-between px-4 py-2 bg-surface-raised/80 backdrop-blur border-b border-border text-xs flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          {/* Legend */}
-          <LegendDot color="bg-violet-950 border-violet-700" label="All builds" />
-          <LegendDot color="bg-green-950 border-green-700" label={`${LABELS[0]} only`} />
-          {reports.length > 1 && (
-            <LegendDot color="bg-red-950 border-red-700" label={`${LABELS[1]} only`} />
-          )}
+          {labels.map((l, i) => (
+            <span key={l} className="inline-flex items-center gap-1.5">
+              <span
+                className="inline-block w-3 h-3 rounded-sm"
+                style={{
+                  background: BUILD_COLORS[i % BUILD_COLORS.length].fill,
+                  border: `1px solid ${BUILD_COLORS[i % BUILD_COLORS.length].border}`,
+                }}
+              />
+              <span className="text-text-muted">{l}</span>
+            </span>
+          ))}
         </div>
         <div className="flex items-center gap-3 text-text-muted">
-          {/* Hero spec selector */}
           {(treeData.heroTrees ?? []).length > 1 && (
             <div className="flex items-center gap-1.5">
               <span className="text-text-faint">Hero:</span>
@@ -219,15 +307,6 @@ export function SpecTreeTab({ reports }: Props) {
         <SectionList title={activeHeroName ?? 'Hero'} nodes={heroNodes} selections={selections} labels={labels} diffsOnly={diffsOnly} />
         <SectionList title="Spec" nodes={specNodes} selections={selections} labels={labels} diffsOnly={diffsOnly} />
       </div>
-    </div>
-  )
-}
-
-function LegendDot({ color, label }: { color: string; label: string }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className={`inline-block w-3 h-3 rounded-sm border ${color}`} />
-      <span className="text-text-muted">{label}</span>
     </div>
   )
 }
