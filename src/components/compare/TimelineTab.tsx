@@ -268,7 +268,7 @@ export function TimelineTab({ reports }: Props) {
             {abilityRows.map((row) => (
               <div
                 key={row.name}
-                className="flex items-center gap-2.5 rounded-md px-1 -mx-1 transition-colors hover:bg-[rgba(124,58,237,0.12)]"
+                className="flex items-center gap-2.5 rounded-md px-1 -mx-1 row-hover"
               >
                 <div className="w-[120px] text-right text-xs text-text-secondary flex-shrink-0 overflow-hidden whitespace-nowrap text-ellipsis">
                   <WowheadSpellLink spellId={row.spellId}>
@@ -354,7 +354,7 @@ export function TimelineTab({ reports }: Props) {
               {buffRows.map((row) => (
                 <div
                   key={row.name}
-                  className="flex items-center gap-2.5 rounded-md px-1 -mx-1 py-0.5 transition-colors hover:bg-[rgba(124,58,237,0.12)]"
+                  className="flex items-center gap-2.5 rounded-md px-1 -mx-1 py-0.5 row-hover"
                 >
                   <div className="w-[140px] text-right text-xs text-text-secondary flex-shrink-0 overflow-hidden whitespace-nowrap text-ellipsis">
                     {row.name}

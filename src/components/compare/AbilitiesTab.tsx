@@ -159,7 +159,7 @@ function AbilityRowComponent({
   return (
     <>
       <div
-        className={`grid items-center border-b border-border text-sm transition-colors hover:bg-[rgba(124,58,237,0.12)] ${
+        className={`grid items-center border-b border-border text-sm row-hover ${
           isChild
             ? 'bg-surface opacity-80'
             : depth % 2 === 0
