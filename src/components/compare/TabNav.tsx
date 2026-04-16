@@ -18,7 +18,7 @@ interface Props {
 
 export function TabNav({ active, onChange }: Props) {
   return (
-    <div className="bg-surface-raised border-b border-border-subtle flex px-4 overflow-x-auto">
+    <div className="bg-surface-raised border-b border-border-subtle flex justify-center px-4 overflow-x-auto">
       {TABS.map((tab) => (
         <button
           key={tab.id}
