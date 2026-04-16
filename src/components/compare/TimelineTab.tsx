@@ -268,7 +268,7 @@ export function TimelineTab({ reports }: Props) {
             {abilityRows.map((row) => (
               <div
                 key={row.name}
-                className="flex items-center gap-2.5 rounded-md px-1 -mx-1 transition-colors hover:bg-[rgba(124,58,237,0.06)]"
+                className="flex items-center gap-2.5 rounded-md px-1 -mx-1 transition-colors hover:bg-[rgba(124,58,237,0.12)]"
               >
                 <div className="w-[120px] text-right text-xs text-text-secondary flex-shrink-0 overflow-hidden whitespace-nowrap text-ellipsis">
                   <WowheadSpellLink spellId={row.spellId}>
@@ -287,20 +287,19 @@ export function TimelineTab({ reports }: Props) {
                         >
                           {LABELS[ri]}
                         </span>
-                        <div className="flex-1 h-3.5 rounded bg-[rgba(30,30,46,0.5)] overflow-hidden">
-                          <div
-                            className="h-full rounded flex items-center pl-1.5 transition-all"
-                            style={{
-                              width: `${Math.max(widthPct, 1)}%`,
-                              background: `linear-gradient(90deg, ${color.fill}, ${color.border})`,
-                            }}
-                          >
-                            {widthPct > 15 && (
-                              <span className="text-[9px] text-white/70">
-                                {val.dps >= 1000 ? `${(val.dps / 1000).toFixed(1)}k` : Math.round(val.dps)}
-                              </span>
-                            )}
+                        <div className="flex-1 flex items-center gap-1">
+                          <div className="flex-1 h-3.5 rounded bg-[rgba(30,30,46,0.5)] overflow-hidden">
+                            <div
+                              className="h-full rounded transition-all"
+                              style={{
+                                width: `${Math.max(widthPct, 1)}%`,
+                                background: `linear-gradient(90deg, ${color.fill}, ${color.border})`,
+                              }}
+                            />
                           </div>
+                          <span className="text-[10px] text-text-secondary flex-shrink-0 tabular-nums">
+                            {val.dps >= 1000 ? `${(val.dps / 1000).toFixed(1)}k` : Math.round(val.dps)}
+                          </span>
                         </div>
                         <span className="w-10 text-right text-[10px] text-text-faint flex-shrink-0">
                           {val.pct.toFixed(1)}%
@@ -355,7 +354,7 @@ export function TimelineTab({ reports }: Props) {
               {buffRows.map((row) => (
                 <div
                   key={row.name}
-                  className="flex items-center gap-2.5 rounded-md px-1 -mx-1 py-0.5 transition-colors hover:bg-[rgba(124,58,237,0.06)]"
+                  className="flex items-center gap-2.5 rounded-md px-1 -mx-1 py-0.5 transition-colors hover:bg-[rgba(124,58,237,0.12)]"
                 >
                   <div className="w-[140px] text-right text-xs text-text-secondary flex-shrink-0 overflow-hidden whitespace-nowrap text-ellipsis">
                     {row.name}

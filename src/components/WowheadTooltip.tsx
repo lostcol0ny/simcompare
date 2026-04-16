@@ -24,6 +24,10 @@ export function WowheadTooltipLoader() {
     script.id = 'wowhead-tooltip-script'
     script.src = 'https://wow.zamimg.com/js/tooltips.js'
     script.async = true
+    script.onload = () => {
+      // Script just loaded — scan for spell links
+      window.$WowheadPower?.refreshLinks?.()
+    }
     document.body.appendChild(script)
   }, [])
 
@@ -35,7 +39,12 @@ export function WowheadTooltipLoader() {
  * Wowhead re-scan the page for new spell links.
  */
 export function refreshWowheadLinks() {
-  window.$WowheadPower?.refreshLinks?.()
+  if (window.$WowheadPower?.refreshLinks) {
+    window.$WowheadPower.refreshLinks()
+  } else {
+    // Script not loaded yet — retry after a short delay
+    setTimeout(() => window.$WowheadPower?.refreshLinks?.(), 1000)
+  }
 }
 
 interface SpellLinkProps {
