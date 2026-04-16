@@ -127,7 +127,7 @@ function SectionList({ title, nodes, selections, labels, diffsOnly }: SectionPro
       <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-text-faint bg-surface/50 border-b border-border">
         {title}
       </div>
-      <table className="w-full text-xs border-collapse">
+      <table className="text-xs border-collapse mx-auto">
         <thead>
           <tr className="border-b border-border">
             <th className="px-3 py-1.5 text-left font-normal text-text-faint">Talent</th>

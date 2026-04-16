@@ -90,7 +90,7 @@ export function AbilitiesTab({ reports }: Props) {
               wrapperStyle={{ fontSize: 11, color: '#64748b' }}
               formatter={(v) => {
                 const idx = LABELS.indexOf(v)
-                return idx >= 0 ? `${v} — ${reports[idx].characterName}` : v
+                return idx >= 0 && idx < reports.length ? `${v} — ${reports[idx].characterName}` : v
               }}
             />
             {reports.map((r, i) => (
@@ -119,21 +119,26 @@ export function AbilitiesTab({ reports }: Props) {
             <XAxis
               dataKey="casts"
               type="number"
+              scale="log"
+              domain={['auto', 'auto']}
               name="Casts/fight"
               tick={{ fill: '#64748b', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
-              label={{ value: 'Casts / Fight', position: 'insideBottom', offset: -2, fill: '#475569', fontSize: 10 }}
+              allowDecimals={false}
+              label={{ value: 'Casts / Fight (log)', position: 'insideBottom', offset: -2, fill: '#475569', fontSize: 10 }}
             />
             <YAxis
               dataKey="dpsPerCast"
               type="number"
+              scale="log"
+              domain={['auto', 'auto']}
               name="DPS/cast"
               tick={{ fill: '#64748b', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(Math.round(v))}
-              label={{ value: 'DPS / Cast', angle: -90, position: 'insideLeft', offset: 4, fill: '#475569', fontSize: 10 }}
+              label={{ value: 'DPS / Cast (log)', angle: -90, position: 'insideLeft', offset: 4, fill: '#475569', fontSize: 10 }}
             />
             <ZAxis dataKey="totalDps" range={[30, 300]} name="Total DPS" />
             <Tooltip
@@ -156,7 +161,7 @@ export function AbilitiesTab({ reports }: Props) {
               wrapperStyle={{ fontSize: 11, color: '#64748b' }}
               formatter={(v) => {
                 const idx = LABELS.indexOf(v)
-                return idx >= 0 ? `${v} — ${reports[idx].characterName}` : v
+                return idx >= 0 && idx < reports.length ? `${v} — ${reports[idx].characterName}` : v
               }}
             />
             {reports.map((r, i) => {

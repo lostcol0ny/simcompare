@@ -20,7 +20,7 @@ export function StatsTab({ reports }: Props) {
   ]
 
   return (
-    <div className="p-4 max-w-4xl">
+    <div className="p-4 max-w-4xl mx-auto">
       {/* Secondary stats radar */}
       <div className="mb-8">
         <h3 className="text-xs text-text-faint uppercase tracking-wide mb-4">
@@ -58,7 +58,7 @@ export function StatsTab({ reports }: Props) {
                 wrapperStyle={{ fontSize: 11, color: '#64748b' }}
                 formatter={(v) => {
                   const idx = LABELS.indexOf(v)
-                  return idx >= 0 ? `${v} — ${reports[idx].characterName}` : v
+                  return idx >= 0 && idx < reports.length ? `${v} — ${reports[idx].characterName}` : v
                 }}
               />
               {reports.map((_, i) => (

@@ -21,6 +21,22 @@ function ComparePageInner() {
       return
     }
 
+    // Skip re-fetch if we already have exactly these reports in state
+    const currentIds = reports.map((r) => r.id)
+    if (ids.length === currentIds.length && ids.every((id) => currentIds.includes(id))) {
+      setLoading(false)
+      return
+    }
+    // Check if the requested IDs are a subset of what we have (e.g. after removal)
+    const byId = new Map(reports.map((r) => [r.id, r]))
+    if (ids.every((id) => byId.has(id))) {
+      setReports(ids.map((id) => byId.get(id)!))
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError(null)
     Promise.all(ids.map(fetchReport))
       .then((loaded) => {
         setReports(loaded)
@@ -48,7 +64,7 @@ function ComparePageInner() {
     )
   }
 
-  return <CompareLayout reports={reports} />
+  return <CompareLayout reports={reports} onReportsChange={setReports} />
 }
 
 export default function ComparePage() {

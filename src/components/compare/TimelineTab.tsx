@@ -195,7 +195,7 @@ export function TimelineTab({ reports }: Props) {
                 wrapperStyle={{ fontSize: 11, color: '#64748b' }}
                 formatter={(v) => {
                   const idx = LABELS.indexOf(v)
-                  return idx >= 0 ? `${v} — ${reports[idx].characterName}` : v
+                  return idx >= 0 && idx < reports.length ? `${v} — ${reports[idx].characterName}` : v
                 }}
               />
               {/* Burst window shading */}
@@ -377,7 +377,7 @@ export function TimelineTab({ reports }: Props) {
                     wrapperStyle={{ fontSize: 11, color: '#64748b' }}
                     formatter={(v) => {
                       const idx = LABELS.indexOf(v)
-                      return idx >= 0 ? `${v} — ${reports[idx].characterName}` : v
+                      return idx >= 0 && idx < reports.length ? `${v} — ${reports[idx].characterName}` : v
                     }}
                   />
                   {reports.map((r, i) =>

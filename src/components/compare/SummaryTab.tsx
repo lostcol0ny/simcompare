@@ -337,7 +337,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                 })}
               </svg>
 
-              <div className="flex gap-3 mt-3">
+              <div className="flex gap-3 mt-3 justify-center">
                 <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
                   <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Overlap</div>
                   <div className="text-sm">

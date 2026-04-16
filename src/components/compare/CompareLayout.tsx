@@ -15,6 +15,7 @@ import { decodeNames, encodeNames, encodeReportIds } from '@/lib/url-params'
 
 interface Props {
   reports: Report[]
+  onReportsChange?: (reports: Report[]) => void
 }
 
 const CONTENT_MAX_WIDTH: Record<number, string> = {
@@ -24,7 +25,7 @@ const CONTENT_MAX_WIDTH: Record<number, string> = {
   5: 'max-w-7xl',
 }
 
-export function CompareLayout({ reports }: Props) {
+export function CompareLayout({ reports, onReportsChange }: Props) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabId>('summary')
@@ -59,11 +60,15 @@ export function CompareLayout({ reports }: Props) {
     }
     const nextNames = customNames.filter((_, i) => i !== index)
     setCustomNames(nextNames)
+    onReportsChange?.(remaining)
+
+    // Use history.replaceState to update the URL without triggering a
+    // Next.js RSC navigation fetch — the data is already in client state
     const ids = encodeReportIds(remaining.map((r) => r.id))
     const hasNames = nextNames.some(Boolean)
     const newUrl = `/compare?reports=${ids}${hasNames ? `&names=${encodeNames(nextNames)}` : ''}`
-    router.replace(newUrl, { scroll: false })
-  }, [reports, customNames, router])
+    window.history.replaceState(window.history.state, '', newUrl)
+  }, [reports, customNames, router, onReportsChange])
 
   const maxWidth = CONTENT_MAX_WIDTH[reports.length] ?? 'max-w-6xl'
 
