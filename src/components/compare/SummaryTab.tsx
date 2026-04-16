@@ -1,10 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  ErrorBar, LabelList, Cell, ResponsiveContainer, Tooltip,
-} from 'recharts'
 import type { Report, TalentTreeData } from '@/lib/types'
 import { getClassColor } from '@/lib/wow-icons'
 import { getSpecId } from '@/lib/spec-ids'
@@ -154,13 +150,6 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
   const leadIdx = reports.findIndex((r) => r.dps === maxDps)
   const delta = (((maxDps - minDps) / minDps) * 100).toFixed(1)
 
-  const chartData = reports.map((r, i) => ({
-    label: LABELS[i],
-    dps: Math.round(r.dps),
-    stdDev: Math.round(r.dpsStdDev),
-    color: REPORT_COLORS[i],
-  }))
-
   return (
     <div>
       {/* Report identity cards */}
@@ -296,58 +285,6 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
           )
         })}
       </div>
-
-      {/* DPS comparison chart */}
-      {reports.length >= 2 && (
-        <div className="px-4 pt-6 pb-2 border-b border-border">
-          <p className="text-xs text-text-faint uppercase tracking-wide mb-4">DPS Comparison</p>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={chartData} margin={{ top: 20, right: 24, bottom: 4, left: 16 }} barCategoryGap="20%">
-              <CartesianGrid vertical={false} stroke="#1e293b" strokeDasharray="3 3" />
-              <XAxis
-                dataKey="label"
-                tick={{ fill: '#64748b', fontSize: 12 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
-                tick={{ fill: '#64748b', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-                width={40}
-              />
-              <Tooltip
-                cursor={{ fill: 'rgba(124, 58, 237, 0.08)' }}
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null
-                  const d = payload[0].payload as typeof chartData[0]
-                  const report = reports[LABELS.indexOf(d.label)]
-                  return (
-                    <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
-                      <p className="font-bold text-text-primary">{d.label} — {report.characterName}</p>
-                      <p className="text-accent-light">{fmt(d.dps)} DPS</p>
-                      <p className="text-text-muted">±{fmt(d.stdDev)} std dev</p>
-                    </div>
-                  )
-                }}
-              />
-              <Bar dataKey="dps" radius={[4, 4, 0, 0]} maxBarSize={100}>
-                {chartData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} fillOpacity={0.85} />
-                ))}
-                <LabelList
-                  dataKey="dps"
-                  position="top"
-                  formatter={(v) => `${(Number(v) / 1000).toFixed(1)}k`}
-                  style={{ fill: '#94a3b8', fontSize: 11, fontWeight: 500 }}
-                />
-                <ErrorBar dataKey="stdDev" width={4} strokeWidth={2} stroke="#475569" />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
 
       {/* DPS Distribution */}
       {reports.length >= 2 && reports.every((r) => r.dpsRawStdDev > 0) && (() => {
