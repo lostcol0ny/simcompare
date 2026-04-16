@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   ResponsiveContainer, Tooltip, Legend, LabelList,
+  ScatterChart, Scatter, ZAxis,
 } from 'recharts'
 import type { Report } from '@/lib/types'
 import { buildAbilityRows, type AbilityRow } from '@/lib/abilities'
@@ -104,6 +105,81 @@ export function AbilitiesTab({ reports }: Props) {
               </Bar>
             ))}
           </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Cast efficiency scatter */}
+      <div className="px-4 pt-5 pb-4 border-b border-border">
+        <p className="text-xs text-text-faint uppercase tracking-wide mb-4">
+          Cast Efficiency — DPS per Cast vs Casts per Fight
+        </p>
+        <ResponsiveContainer width="100%" height={260}>
+          <ScatterChart margin={{ top: 8, right: 24, bottom: 4, left: 16 }}>
+            <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+            <XAxis
+              dataKey="casts"
+              type="number"
+              name="Casts/fight"
+              tick={{ fill: '#64748b', fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              label={{ value: 'Casts / Fight', position: 'insideBottom', offset: -2, fill: '#475569', fontSize: 10 }}
+            />
+            <YAxis
+              dataKey="dpsPerCast"
+              type="number"
+              name="DPS/cast"
+              tick={{ fill: '#64748b', fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(Math.round(v))}
+              label={{ value: 'DPS / Cast', angle: -90, position: 'insideLeft', offset: 4, fill: '#475569', fontSize: 10 }}
+            />
+            <ZAxis dataKey="totalDps" range={[30, 300]} name="Total DPS" />
+            <Tooltip
+              cursor={{ stroke: 'rgba(124, 58, 237, 0.3)' }}
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null
+                const d = payload[0].payload as { name: string; casts: number; dpsPerCast: number; totalDps: number; buildLabel: string }
+                return (
+                  <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
+                    <p className="font-bold text-text-primary">{d.name}</p>
+                    <p className="text-text-muted">{d.buildLabel}</p>
+                    <p className="text-text-secondary">{d.casts.toFixed(1)} casts/fight</p>
+                    <p className="text-text-secondary">{d.dpsPerCast >= 1000 ? `${(d.dpsPerCast / 1000).toFixed(1)}k` : Math.round(d.dpsPerCast)} DPS/cast</p>
+                    <p className="text-text-secondary">{Math.round(d.totalDps).toLocaleString()} total DPS</p>
+                  </div>
+                )
+              }}
+            />
+            <Legend
+              wrapperStyle={{ fontSize: 11, color: '#64748b' }}
+              formatter={(v) => {
+                const idx = LABELS.indexOf(v)
+                return idx >= 0 ? `${v} — ${reports[idx].characterName}` : v
+              }}
+            />
+            {reports.map((r, i) => {
+              const scatterData = r.abilities
+                .filter((a) => a.castsPerFight > 0 && a.dps > 0)
+                .map((a) => ({
+                  name: a.spellName,
+                  casts: Math.round(a.castsPerFight * 10) / 10,
+                  dpsPerCast: Math.round((a.dps / a.castsPerFight) * 10) / 10,
+                  totalDps: a.dps,
+                  buildLabel: `${LABELS[i]} — ${r.characterName}`,
+                }))
+              return (
+                <Scatter
+                  key={r.id}
+                  name={LABELS[i]}
+                  data={scatterData}
+                  fill={REPORT_COLORS[i]}
+                  fillOpacity={0.7}
+                />
+              )
+            })}
+          </ScatterChart>
         </ResponsiveContainer>
       </div>
 
