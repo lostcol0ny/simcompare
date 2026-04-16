@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  ResponsiveContainer, Tooltip, Legend,
+  ResponsiveContainer, Tooltip, Legend, LabelList,
 } from 'recharts'
 import type { Report } from '@/lib/types'
 import { buildAbilityRows, type AbilityRow } from '@/lib/abilities'
@@ -92,7 +92,15 @@ export function AbilitiesTab({ reports }: Props) {
               }}
             />
             {reports.map((r, i) => (
-              <Bar key={r.id} dataKey={LABELS[i]} fill={REPORT_COLORS[i]} fillOpacity={0.85} radius={[0, 3, 3, 0]} />
+              <Bar key={r.id} dataKey={LABELS[i]} fill={REPORT_COLORS[i]} fillOpacity={0.85} radius={[0, 3, 3, 0]}>
+                <LabelList
+                  dataKey={LABELS[i]}
+                  position="right"
+                  fill="#94a3b8"
+                  fontSize={10}
+                  formatter={(v) => { const n = Number(v); return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n) }}
+                />
+              </Bar>
             ))}
           </BarChart>
         </ResponsiveContainer>
@@ -151,7 +159,7 @@ function AbilityRowComponent({
   return (
     <>
       <div
-        className={`grid items-center border-b border-border text-sm ${
+        className={`grid items-center border-b border-border text-sm transition-colors hover:bg-[rgba(124,58,237,0.12)] ${
           isChild
             ? 'bg-surface opacity-80'
             : depth % 2 === 0

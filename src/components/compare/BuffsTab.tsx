@@ -43,7 +43,7 @@ export function BuffsTab({ reports }: Props) {
           {allBuffNames.map((name) => (
             <div
               key={name}
-              className="grid items-center border-b border-border last:border-0 px-3 py-2 bg-surface text-sm"
+              className="grid items-center border-b border-border last:border-0 px-3 py-2 bg-surface text-sm transition-colors hover:bg-[rgba(124,58,237,0.12)]"
               style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr)` }}
             >
               <span className="text-text-secondary text-xs truncate pr-2">{name}</span>
@@ -93,7 +93,7 @@ export function BuffsTab({ reports }: Props) {
             return (
               <div
                 key={key}
-                className="grid items-start border-b border-border last:border-0 px-3 py-2 bg-surface"
+                className="grid items-start border-b border-border last:border-0 px-3 py-2 bg-surface transition-colors hover:bg-[rgba(124,58,237,0.12)]"
                 style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr)` }}
               >
                 <span className="text-text-secondary text-xs truncate pr-2 pt-0.5">{label}</span>
