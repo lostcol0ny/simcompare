@@ -70,6 +70,7 @@ export function AbilitiesTab({ reports }: Props) {
               width={136}
             />
             <Tooltip
+              cursor={{ fill: 'rgba(124, 58, 237, 0.08)' }}
               content={({ active, payload, label }) => {
                 if (!active || !payload?.length) return null
                 return (

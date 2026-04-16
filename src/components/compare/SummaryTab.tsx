@@ -268,6 +268,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                 width={40}
               />
               <Tooltip
+                cursor={{ fill: 'rgba(124, 58, 237, 0.08)' }}
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null
                   const d = payload[0].payload as typeof chartData[0]

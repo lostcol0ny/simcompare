@@ -122,6 +122,7 @@ export function TimelineTab({ reports }: Props) {
                 width={40}
               />
               <Tooltip
+                cursor={{ stroke: 'rgba(124, 58, 237, 0.3)' }}
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null
                   return (

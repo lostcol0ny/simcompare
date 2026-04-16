@@ -40,6 +40,7 @@ export function StatsTab({ reports }: Props) {
                 angle={30}
               />
               <Tooltip
+                cursor={{ stroke: 'rgba(124, 58, 237, 0.3)' }}
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null
                   return (
