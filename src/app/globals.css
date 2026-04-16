@@ -68,5 +68,5 @@ body {
   transition: background-color 0.15s ease;
 }
 .row-hover:hover {
-  background-color: rgba(124, 58, 237, 0.12);
+  background-color: rgba(124, 58, 237, 0.12) !important;
 }

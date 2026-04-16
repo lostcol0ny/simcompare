@@ -39,9 +39,9 @@ export function AbilitiesTab({ reports }: Props) {
   })
 
   return (
-    <div>
-      {/* Ability breakdown chart */}
-      <div className="px-4 pt-5 pb-4 border-b border-border">
+    <div className="flex" data-no-grid-click>
+      {/* Left: Ability breakdown chart */}
+      <div className="w-[420px] flex-shrink-0 border-r border-border p-4">
         <p className="text-xs text-text-faint uppercase tracking-wide mb-4">
           Top Abilities — DPS Contribution
         </p>
@@ -49,7 +49,7 @@ export function AbilitiesTab({ reports }: Props) {
           <BarChart
             data={chartData}
             layout="vertical"
-            margin={{ top: 0, right: 80, bottom: 0, left: 140 }}
+            margin={{ top: 0, right: 60, bottom: 0, left: 8 }}
             barCategoryGap="25%"
             barGap={2}
           >
@@ -57,17 +57,17 @@ export function AbilitiesTab({ reports }: Props) {
             <XAxis
               type="number"
               tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
-              tick={{ fill: '#64748b', fontSize: 11 }}
+              tick={{ fill: '#64748b', fontSize: 10 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               dataKey="name"
               type="category"
-              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              tick={{ fill: '#94a3b8', fontSize: 10 }}
               axisLine={false}
               tickLine={false}
-              width={136}
+              width={100}
             />
             <Tooltip
               content={({ active, payload, label }) => {
@@ -85,7 +85,7 @@ export function AbilitiesTab({ reports }: Props) {
               }}
             />
             <Legend
-              wrapperStyle={{ fontSize: 11, color: '#64748b' }}
+              wrapperStyle={{ fontSize: 10, color: '#64748b' }}
               formatter={(v) => {
                 const idx = LABELS.indexOf(v)
                 return idx >= 0 ? `${v} — ${reports[idx].characterName}` : v
@@ -97,7 +97,7 @@ export function AbilitiesTab({ reports }: Props) {
                   dataKey={LABELS[i]}
                   position="right"
                   fill="#94a3b8"
-                  fontSize={10}
+                  fontSize={9}
                   formatter={(v) => { const n = Number(v); return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n) }}
                 />
               </Bar>
@@ -106,34 +106,36 @@ export function AbilitiesTab({ reports }: Props) {
         </ResponsiveContainer>
       </div>
 
-      {/* Table header */}
-      <div className="px-4 py-2 bg-surface-raised border-b border-border text-xs text-text-muted">
-        Sorted by DPS · <span className="text-accent-light">highest first</span>
-      </div>
+      {/* Right: Ability table */}
+      <div className="flex-1 min-w-0 overflow-x-auto">
+        <div className="px-4 py-2 bg-surface-raised border-b border-border text-xs text-text-muted">
+          Sorted by DPS · <span className="text-accent-light">highest first</span>
+        </div>
 
-      <div
-        className="grid px-4 py-1.5 bg-surface border-b border-border text-xs text-text-faint uppercase tracking-wide"
-        style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 80px` }}
-      >
-        <span>Ability</span>
-        {reports.map((r, i) => (
-          <span key={r.id} className="text-right" style={{ color: REPORT_COLORS[i] }}>
-            {LABELS[i]} — {r.characterName}
-          </span>
+        <div
+          className="grid px-4 py-1.5 bg-surface border-b border-border text-xs text-text-faint uppercase tracking-wide"
+          style={{ gridTemplateColumns: `180px repeat(${reports.length}, 1fr) 70px` }}
+        >
+          <span>Ability</span>
+          {reports.map((r, i) => (
+            <span key={r.id} className="text-right" style={{ color: REPORT_COLORS[i] }}>
+              {LABELS[i]} — {r.characterName}
+            </span>
+          ))}
+          <span className="text-center">Δ</span>
+        </div>
+
+        {rows.map((row) => (
+          <AbilityRowComponent
+            key={row.id}
+            row={row}
+            reports={reports}
+            expandedRows={expandedRows}
+            toggleRow={toggleRow}
+            depth={0}
+          />
         ))}
-        <span className="text-center">Δ vs best</span>
       </div>
-
-      {rows.map((row) => (
-        <AbilityRowComponent
-          key={row.id}
-          row={row}
-          reports={reports}
-          expandedRows={expandedRows}
-          toggleRow={toggleRow}
-          depth={0}
-        />
-      ))}
     </div>
   )
 }
@@ -167,7 +169,7 @@ function AbilityRowComponent({
             : 'bg-surface-raised'
         }`}
         style={{
-          gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 80px`,
+          gridTemplateColumns: `180px repeat(${reports.length}, 1fr) 70px`,
           paddingTop: '6px',
           paddingBottom: '6px',
           paddingLeft: `${16 + depth * 16}px`,

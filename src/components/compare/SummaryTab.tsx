@@ -324,7 +324,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
 function StatBar({ label, value, color }: { label: string; value: number; color: string }) {
   const pct = Math.min(Math.max(value, 0), 100)
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 rounded px-1 -mx-1 py-0.5 row-hover">
       <span className="text-text-faint w-14 shrink-0">{label}</span>
       <div className="flex-1 h-1.5 bg-surface-overlay rounded-full overflow-hidden">
         <div
