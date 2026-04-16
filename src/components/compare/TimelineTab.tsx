@@ -66,57 +66,6 @@ function formatResourceName(key: string): string {
   return key.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 }
 
-// ── DPS Distribution helpers ─────────────────────────────────────────────────
-
-/** Standard normal CDF via Abramowitz & Stegun rational approximation. */
-function normalCDF(x: number): number {
-  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741
-  const a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911
-  const sign = x < 0 ? -1 : 1
-  const t = 1 / (1 + p * Math.abs(x))
-  const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x / 2)
-  return 0.5 * (1 + sign * y)
-}
-
-/** Normal PDF. */
-function normalPDF(x: number, mean: number, stdDev: number): number {
-  if (stdDev <= 0) return x === mean ? 1 : 0
-  const z = (x - mean) / stdDev
-  return Math.exp(-0.5 * z * z) / (stdDev * Math.sqrt(2 * Math.PI))
-}
-
-/** Probability that build with (mean2, sd2) beats build with (mean1, sd1). */
-function overlapProbability(mean1: number, sd1: number, mean2: number, sd2: number): number {
-  const combinedSd = Math.sqrt(sd1 * sd1 + sd2 * sd2)
-  if (combinedSd <= 0) return mean2 > mean1 ? 1 : 0
-  return normalCDF((mean2 - mean1) / combinedSd)
-}
-
-/** Build SVG path data for a normal distribution curve. */
-function buildDistributionPath(
-  mean: number, stdDev: number, xMin: number, xMax: number,
-  width: number, height: number, maxPdf: number, samples = 100
-): string {
-  const points: string[] = []
-  for (let i = 0; i <= samples; i++) {
-    const x = xMin + (xMax - xMin) * (i / samples)
-    const px = (i / samples) * width
-    const pdf = normalPDF(x, mean, stdDev)
-    const py = height - (pdf / maxPdf) * (height * 0.9)
-    points.push(`${px.toFixed(1)},${py.toFixed(1)}`)
-  }
-  return `M ${points[0]} ` + points.slice(1).map((p) => `L ${p}`).join(' ')
-}
-
-/** Build a closed SVG path (for fill) by adding bottom-edge return. */
-function buildDistributionFill(
-  mean: number, stdDev: number, xMin: number, xMax: number,
-  width: number, height: number, maxPdf: number, samples = 100
-): string {
-  const path = buildDistributionPath(mean, stdDev, xMin, xMax, width, height, maxPdf, samples)
-  return `${path} L ${width},${height} L 0,${height} Z`
-}
-
 // ── Burst detection helpers ─────────────────────────────────────────────────
 
 interface BurstWindow {
@@ -196,19 +145,6 @@ export function TimelineTab({ reports }: Props) {
   const baselines = reports.map((r) => r.dps)
   const burstsPerBuild = smoothedPerBuild.map((s, i) => detectBursts(s, baselines[i]))
   const hasBursts = burstsPerBuild.some((b) => b.length > 0)
-
-  // DPS distribution
-  const hasDistribution = reports.length >= 2 && reports.every((r) => r.dpsRawStdDev > 0)
-  const leaderIdx = reports.reduce((best, r, i) => r.dps > reports[best].dps ? i : best, 0)
-
-  // Distribution chart dimensions
-  const DIST_W = 600, DIST_H = 180
-  let xMin = 0, xMax = 1, maxPdf = 0.001
-  if (hasDistribution) {
-    xMin = Math.min(...reports.map((r) => r.dps - 3.5 * r.dpsRawStdDev))
-    xMax = Math.max(...reports.map((r) => r.dps + 3.5 * r.dpsRawStdDev))
-    maxPdf = Math.max(...reports.map((r) => normalPDF(r.dps, r.dps, r.dpsRawStdDev)))
-  }
 
   const fmtK = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k` : Math.round(n).toLocaleString()
 
@@ -342,92 +278,6 @@ export function TimelineTab({ reports }: Props) {
           )}
         </div>
       </div>
-
-      {/* ── DPS Distribution ─────────────────────────────────────────── */}
-      {hasDistribution && (
-        <div>
-          <p className="text-xs text-text-faint uppercase tracking-wide mb-4">
-            DPS Distribution
-          </p>
-          <div className="bg-surface-raised border border-border rounded-lg p-4">
-            <svg viewBox={`0 0 ${DIST_W} ${DIST_H + 20}`} className="w-full" style={{ maxHeight: 220 }}>
-              {/* Curves */}
-              {reports.map((r, i) => (
-                <g key={i}>
-                  <path
-                    d={buildDistributionFill(r.dps, r.dpsRawStdDev, xMin, xMax, DIST_W, DIST_H, maxPdf)}
-                    fill={REPORT_COLORS[i]}
-                    fillOpacity={0.12}
-                  />
-                  <path
-                    d={buildDistributionPath(r.dps, r.dpsRawStdDev, xMin, xMax, DIST_W, DIST_H, maxPdf)}
-                    fill="none"
-                    stroke={REPORT_COLORS[i]}
-                    strokeWidth={2}
-                  />
-                  {/* Mean line */}
-                  {(() => {
-                    const mx = ((r.dps - xMin) / (xMax - xMin)) * DIST_W
-                    return (
-                      <>
-                        <line x1={mx} y1={0} x2={mx} y2={DIST_H} stroke={REPORT_COLORS[i]} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
-                        <text x={mx} y={12} fill={REPORT_COLORS[i]} fontSize={9} textAnchor="middle">{fmtK(r.dps)}</text>
-                      </>
-                    )
-                  })()}
-                </g>
-              ))}
-              {/* X axis labels */}
-              {Array.from({ length: 6 }, (_, i) => {
-                const val = xMin + (xMax - xMin) * (i / 5)
-                const px = (i / 5) * DIST_W
-                return <text key={i} x={px} y={DIST_H + 14} fill="#475569" fontSize={9} textAnchor="middle">{fmtK(val)}</text>
-              })}
-            </svg>
-
-            {/* Stat pills */}
-            <div className="flex gap-3 mt-3">
-              <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Overlap</div>
-                <div className="text-sm">
-                  {reports.map((r, i) => {
-                    if (i === leaderIdx) return null
-                    const prob = overlapProbability(reports[leaderIdx].dps, reports[leaderIdx].dpsRawStdDev, r.dps, r.dpsRawStdDev)
-                    return (
-                      <div key={i} className="font-semibold" style={{ color: REPORT_COLORS[i] }}>
-                        {(prob * 100).toFixed(1)}% <span className="text-[9px] text-text-faint font-normal">chance {LABELS[i]} beats {LABELS[leaderIdx]}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-              <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">DPS Range (95% CI)</div>
-                <div className="text-[13px] font-medium space-y-0.5">
-                  {reports.map((r, i) => (
-                    <div key={i} style={{ color: REPORT_COLORS[i] }}>
-                      {LABELS[i]}: {fmtK(r.dps - 1.96 * r.dpsRawStdDev)} – {fmtK(r.dps + 1.96 * r.dpsRawStdDev)}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Consistency</div>
-                <div className="text-[13px] font-medium space-y-0.5">
-                  {reports.map((r, i) => {
-                    const cvPct = r.dps > 0 ? (r.dpsRawStdDev / r.dps) * 100 : 0
-                    return (
-                      <div key={i} style={{ color: REPORT_COLORS[i] }}>
-                        {LABELS[i]}: ±{fmtK(r.dpsRawStdDev)} <span className="text-[9px] text-text-faint">({cvPct.toFixed(1)}%)</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Resource timelines ────────────────────────────────────────── */}
       {resources.map((resource) => {
