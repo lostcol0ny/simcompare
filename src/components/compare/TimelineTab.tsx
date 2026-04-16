@@ -10,7 +10,6 @@ import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
 import { BUILD_COLORS } from '@/lib/report-labels'
 
 const WINDOW = 10  // rolling average window in seconds
-const MIN_BUFF_UPTIME = 5  // minimum uptime % to show
 
 interface Props {
   reports: Report[]
@@ -62,31 +61,6 @@ function formatResourceName(key: string): string {
   return key.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 }
 
-// ── Buff Uptime helpers ──────────────────────────────────────────────────────
-
-interface BuffRow {
-  name: string
-  uptimes: number[]  // one per report, 0-100
-}
-
-function buildBuffComparison(reports: Report[]): BuffRow[] {
-  const buffMap = new Map<string, number[]>()
-
-  for (let ri = 0; ri < reports.length; ri++) {
-    for (const buff of reports[ri].buffs) {
-      if (!buffMap.has(buff.name)) {
-        buffMap.set(buff.name, reports.map(() => 0))
-      }
-      buffMap.get(buff.name)![ri] = buff.uptime
-    }
-  }
-
-  return [...buffMap.entries()]
-    .filter(([, uptimes]) => uptimes.some((u) => u >= MIN_BUFF_UPTIME))
-    .sort((a, b) => Math.max(...b[1]) - Math.max(...a[1]))
-    .map(([name, uptimes]) => ({ name, uptimes }))
-}
-
 // ── Resource summary helpers ─────────────────────────────────────────────────
 
 interface ResourceSummary {
@@ -120,8 +94,6 @@ function buildResourceSummary(reports: Report[], resource: string): ResourceSumm
 export function TimelineTab({ reports }: Props) {
   const dpsData = buildDpsData(reports)
   const resources = allResources(reports)
-  const buffRows = buildBuffComparison(reports)
-
   return (
     <div className="p-4 space-y-8" data-no-grid-click>
 
@@ -188,62 +160,6 @@ export function TimelineTab({ reports }: Props) {
           </ResponsiveContainer>
         </div>
       </div>
-
-      {/* ── Buff Uptime Comparison ────────────────────────────────────── */}
-      {buffRows.length > 0 && (
-        <div>
-          <p className="text-xs text-text-faint uppercase tracking-wide mb-4">
-            Buff Uptime Comparison
-          </p>
-          <div className="bg-surface-raised border border-border rounded-lg p-4">
-            <div className="space-y-1.5">
-              {buffRows.map((row) => (
-                <div
-                  key={row.name}
-                  className="flex items-center gap-2.5 rounded-md px-1 -mx-1 py-0.5 row-hover"
-                >
-                  <div className="w-[140px] text-right text-xs text-text-secondary flex-shrink-0 overflow-hidden whitespace-nowrap text-ellipsis">
-                    {row.name}
-                  </div>
-                  <div className="flex-1 flex flex-col gap-0.5">
-                    {row.uptimes.map((uptime, ri) => {
-                      const color = BUILD_COLORS[ri % BUILD_COLORS.length]
-                      return (
-                        <div key={ri} className="h-2.5 rounded bg-[rgba(30,30,46,0.5)] overflow-hidden">
-                          <div
-                            className="h-full rounded transition-all"
-                            style={{
-                              width: `${uptime}%`,
-                              background: `linear-gradient(90deg, ${color.fill}, ${color.border})`,
-                            }}
-                          />
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <div className="flex flex-col gap-0.5 w-9 flex-shrink-0">
-                    {row.uptimes.map((uptime, ri) => {
-                      const color = BUILD_COLORS[ri % BUILD_COLORS.length]
-                      return (
-                        <span
-                          key={ri}
-                          className="text-[9px] text-right h-2.5 leading-[10px]"
-                          style={{ color: color.border }}
-                        >
-                          {Math.round(uptime)}%
-                        </span>
-                      )
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-[10px] text-text-faint italic text-center mt-3">
-              Showing buffs with &ge;{MIN_BUFF_UPTIME}% uptime in at least one build &middot; sorted by max uptime
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* ── Resource timelines ────────────────────────────────────────── */}
       {resources.map((resource) => {
