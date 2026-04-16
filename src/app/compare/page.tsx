@@ -16,7 +16,7 @@ function ComparePageInner() {
 
   useEffect(() => {
     const ids = decodeReportIds(searchParams.get('reports'))
-    if (ids.length < 2) {
+    if (ids.length < 1) {
       router.replace('/')
       return
     }

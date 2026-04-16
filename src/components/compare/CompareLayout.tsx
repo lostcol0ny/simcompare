@@ -53,7 +53,7 @@ export function CompareLayout({ reports }: Props) {
 
   const handleRemoveReport = useCallback((index: number) => {
     const remaining = reports.filter((_, i) => i !== index)
-    if (remaining.length < 2) {
+    if (remaining.length === 0) {
       router.push('/')
       return
     }
@@ -70,27 +70,40 @@ export function CompareLayout({ reports }: Props) {
   return (
     <div className="min-h-screen flex flex-col" data-no-grid-click>
       <StickyHeader reports={namedReports} />
-      <TabNav active={activeTab} onChange={setActiveTab} />
+      {reports.length >= 2 && <TabNav active={activeTab} onChange={setActiveTab} />}
+      {reports.length === 1 && (
+        <div className="text-center py-4 bg-surface-raised border-b border-border-subtle">
+          <p className="text-text-muted text-sm">
+            Use <span className="text-accent-light font-medium">+ Add report</span> above to add another report for comparison.
+          </p>
+        </div>
+      )}
       <div className="flex-1">
         <div className={`mx-auto w-full ${maxWidth} tab-viewport`}>
-          <div className={`tab-panel ${activeTab === 'summary' ? 'tab-panel-active' : ''}`}>
+          {reports.length === 1 ? (
             <SummaryTab reports={namedReports} onRename={handleRename} onRemove={handleRemoveReport} />
-          </div>
-          <div className={`tab-panel ${activeTab === 'abilities' ? 'tab-panel-active' : ''}`}>
-            <AbilitiesTab reports={namedReports} />
-          </div>
-          <div className={`tab-panel ${activeTab === 'talents' ? 'tab-panel-active' : ''}`}>
-            <SpecTreeTab reports={namedReports} />
-          </div>
-          <div className={`tab-panel ${activeTab === 'stats' ? 'tab-panel-active' : ''}`}>
-            <StatsTab reports={namedReports} />
-          </div>
-          <div className={`tab-panel ${activeTab === 'timeline' ? 'tab-panel-active' : ''}`}>
-            <TimelineTab reports={namedReports} />
-          </div>
-          <div className={`tab-panel ${activeTab === 'buffs' ? 'tab-panel-active' : ''}`}>
-            <BuffsTab reports={namedReports} />
-          </div>
+          ) : (
+            <>
+              <div className={`tab-panel ${activeTab === 'summary' ? 'tab-panel-active' : ''}`}>
+                <SummaryTab reports={namedReports} onRename={handleRename} onRemove={handleRemoveReport} />
+              </div>
+              <div className={`tab-panel ${activeTab === 'abilities' ? 'tab-panel-active' : ''}`}>
+                <AbilitiesTab reports={namedReports} />
+              </div>
+              <div className={`tab-panel ${activeTab === 'talents' ? 'tab-panel-active' : ''}`}>
+                <SpecTreeTab reports={namedReports} />
+              </div>
+              <div className={`tab-panel ${activeTab === 'stats' ? 'tab-panel-active' : ''}`}>
+                <StatsTab reports={namedReports} />
+              </div>
+              <div className={`tab-panel ${activeTab === 'timeline' ? 'tab-panel-active' : ''}`}>
+                <TimelineTab reports={namedReports} />
+              </div>
+              <div className={`tab-panel ${activeTab === 'buffs' ? 'tab-panel-active' : ''}`}>
+                <BuffsTab reports={namedReports} />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

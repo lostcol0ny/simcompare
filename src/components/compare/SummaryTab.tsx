@@ -18,6 +18,14 @@ function fmt(n: number) {
   return Math.round(n).toLocaleString()
 }
 
+function formatRace(raw: string): string {
+  return raw
+    .replace(/_(?:alliance|horde)$/i, '')
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+}
+
 function fmtK(n: number) {
   return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : Math.round(n).toLocaleString()
 }
@@ -241,6 +249,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                   <p className="text-xs text-text-muted truncate">
                     {heroName ? `${heroName} ${r.specialization}` : r.specialization}
                   </p>
+                  <p className="text-xs text-text-faint truncate">{formatRace(r.race)}</p>
                 </div>
               </div>
 
@@ -265,7 +274,6 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
 
               <div className="mt-3 space-y-0.5 text-xs text-text-secondary">
                 <p>{r.fightStyle} · {r.targetCount} {r.targetCount === 1 ? 'target' : 'targets'} · {r.fightDuration}s ±{Math.round(r.varyLength * 100)}%</p>
-                <p className="text-text-faint">{r.race}</p>
                 {r.setBonus && (
                   <p className="text-xs mt-0.5">
                     <span
