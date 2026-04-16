@@ -114,7 +114,7 @@ export function AbilitiesTab({ reports }: Props) {
 
       <div
         className="grid px-4 py-1.5 bg-surface border-b border-border text-xs text-text-faint uppercase tracking-wide"
-        style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 80px` }}
+        style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 60px 70px 80px` }}
       >
         <span>Ability</span>
         {reports.map((r, i) => (
@@ -122,6 +122,8 @@ export function AbilitiesTab({ reports }: Props) {
             {LABELS[i]} — {r.characterName}
           </span>
         ))}
+        <span className="text-right">CV%</span>
+        <span className="text-right">DPS/Cast</span>
         <span className="text-center">Δ vs best</span>
       </div>
 
@@ -168,7 +170,7 @@ function AbilityRowComponent({
             : 'bg-surface-raised'
         }`}
         style={{
-          gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 80px`,
+          gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 60px 70px 80px`,
           paddingTop: '6px',
           paddingBottom: '6px',
           paddingLeft: `${16 + depth * 16}px`,
@@ -237,6 +239,30 @@ function AbilityRowComponent({
             )}
           </div>
         ))}
+
+        {/* CV% — coefficient of variation across builds */}
+        <div className="text-right text-xs">
+          {(() => {
+            const present = row.values.filter((v) => v.dps > 0)
+            if (present.length === 0) return <span className="text-text-faint">—</span>
+            // Average CV across builds that have this ability
+            const cvs = present.map((v) => v.dps > 0 && v.dpsStdDev > 0 ? (v.dpsStdDev / v.dps) * 100 : 0)
+            const avgCv = cvs.reduce((s, c) => s + c, 0) / cvs.length
+            if (avgCv === 0) return <span className="text-text-faint">—</span>
+            const color = avgCv > 20 ? 'text-negative' : avgCv > 10 ? 'text-warning' : 'text-text-secondary'
+            return <span className={color}>{avgCv.toFixed(1)}%</span>
+          })()}
+        </div>
+
+        {/* DPS per cast */}
+        <div className="text-right text-xs">
+          {(() => {
+            const present = row.values.filter((v) => v.dps > 0 && v.castsPerFight > 0)
+            if (present.length === 0) return <span className="text-text-faint">—</span>
+            const avgDpsPerCast = present.reduce((s, v) => s + v.dps / v.castsPerFight, 0) / present.length
+            return <span className="text-text-secondary">{avgDpsPerCast >= 1000 ? `${(avgDpsPerCast / 1000).toFixed(1)}k` : Math.round(avgDpsPerCast).toLocaleString()}</span>
+          })()}
+        </div>
 
         <div className="text-center text-xs">
           {maxDps > 0 && row.values.filter((v) => v.dps > 0).length > 1 ? (

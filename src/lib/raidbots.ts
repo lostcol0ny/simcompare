@@ -106,6 +106,7 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
             spellName: formatPetName(petKey),
             school: 'physical',
             dps: petDps,
+            dpsStdDev: 0,
             castsPerFight: 0,
             percentOfTotal: totalDps > 0 ? (petDps / totalDps) * 100 : 0,
             children: merged,
@@ -155,6 +156,9 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
     talentString: player.talents,
     dps: cd.dps.mean,
     dpsStdDev: cd.dps.count > 0 ? cd.dps.std_dev / Math.sqrt(cd.dps.count) : cd.dps.std_dev,
+    dpsMin: cd.dps.min,
+    dpsMax: cd.dps.max,
+    dpsRawStdDev: cd.dps.std_dev,
     fightStyle: opts.fight_style,
     targetCount: opts.desired_targets,
     fightDuration: opts.max_time,
@@ -200,6 +204,7 @@ function mergeLeavesByName(leaves: ParsedAbility[], totalDps: number): ParsedAbi
       map.set(a.spellName, {
         ...existing,
         dps,
+        dpsStdDev: Math.sqrt(existing.dpsStdDev ** 2 + a.dpsStdDev ** 2),
         castsPerFight: existing.castsPerFight + a.castsPerFight,
         percentOfTotal: totalDps > 0 ? (dps / totalDps) * 100 : 0,
       })
@@ -242,6 +247,7 @@ function parseAbilities(
       spellName,
       school: stat.school ?? 'physical',
       dps,
+      dpsStdDev: stat.portion_aps?.std_dev ?? 0,
       castsPerFight: stat.num_executes.mean,
       percentOfTotal: totalDps > 0 ? (dps / totalDps) * 100 : 0,
       children: flatChildren,

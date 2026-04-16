@@ -2,6 +2,7 @@ import type { ParsedAbility, Report } from './types'
 
 export interface AbilityValue {
   dps: number
+  dpsStdDev: number
   castsPerFight: number
   percentOfTotal: number
   exclusive: boolean  // true if this ability only exists in this report
@@ -35,6 +36,7 @@ export function buildAbilityRows(reports: Report[]): AbilityRow[] {
 
     const values: AbilityValue[] = appearances.map((a) => ({
       dps: a?.dps ?? 0,
+      dpsStdDev: a?.dpsStdDev ?? 0,
       castsPerFight: a?.castsPerFight ?? 0,
       percentOfTotal: a?.percentOfTotal ?? 0,
       exclusive: a !== undefined && present.length === 1,

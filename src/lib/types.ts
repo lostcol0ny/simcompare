@@ -107,7 +107,10 @@ export interface Report {
   race: string
   talentString: string
   dps: number
-  dpsStdDev: number
+  dpsStdDev: number        // standard error of the mean (std_dev / √count)
+  dpsMin: number            // minimum DPS across all iterations
+  dpsMax: number            // maximum DPS across all iterations
+  dpsRawStdDev: number      // per-iteration std_dev (NOT divided by √count)
   fightStyle: string
   targetCount: number
   fightDuration: number
@@ -137,6 +140,7 @@ export interface ParsedAbility {
   spellName: string
   school: string
   dps: number
+  dpsStdDev: number         // per-iteration std_dev for this ability's DPS
   castsPerFight: number
   percentOfTotal: number
   children: ParsedAbility[]
