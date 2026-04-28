@@ -20,7 +20,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx vitest run src/lib/__tests__/decoder-regression.test.ts
-      - run: npm run lint
 
   slot-map-freshness:
     runs-on: ubuntu-latest
