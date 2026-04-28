@@ -187,8 +187,15 @@ export function SpecTreeTab({ reports }: Props) {
 
   const activeHeroName = useMemo((): string | null => {
     if (!treeData) return null
+    // Prefer Blizzard's authoritative answer from the Raidbots envelope when
+    // every report agrees. Falls back to decoder-based detection (which can
+    // misfire if the cached slot map drifts from upstream SimC).
+    const fromBlizzard = [
+      ...new Set(reports.map((r) => r.selectedHeroName).filter((n): n is string => !!n)),
+    ]
+    if (fromBlizzard.length === 1) return fromBlizzard[0]
     return detectHeroTree(rawSelections, treeData)
-  }, [treeData, rawSelections])
+  }, [treeData, rawSelections, reports])
 
   const selections = useMemo<SelectedTalent[][]>(() => {
     if (!treeData) return rawSelections

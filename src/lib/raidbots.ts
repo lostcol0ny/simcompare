@@ -1,4 +1,5 @@
 import type { RaidbotsRawData, Report, ParsedAbility, ParsedBuff, ParsedGain, SetBonus } from './types'
+import { getSpecId } from './spec-ids'
 
 const RAIDBOTS_REPORT_PATTERN = /raidbots\.com\/simbot\/report\/([A-Za-z0-9]+)/
 
@@ -84,6 +85,32 @@ function parseGains(rawGains: RaidbotsRawData['sim']['players'][0]['gains']): Pa
   return result
 }
 
+/**
+ * Pull Blizzard's authoritative active hero spec out of the Raidbots
+ * loadout envelope, when present. This sidesteps the talent-string decoder
+ * for hero detection — see `selectedHeroName` in `Report`.
+ *
+ * The envelope contains one entry per spec the character has loadouts for
+ * (e.g. all three Warlock specs); each carries its own active loadout.
+ * We must match the entry whose `specialization.id` matches the spec being
+ * simmed — picking the first one would silently return the wrong hero spec
+ * for any character with multiple specs.
+ */
+function extractSelectedHeroTree(
+  raw: RaidbotsRawData,
+  activeSpecId: number | null
+): { id?: number; name?: string } {
+  if (activeSpecId === null) return {}
+  const specs =
+    raw.simbot?.meta?.rawFormData?.character?.v2?.specializations?.specializations ?? []
+  const match = specs.find((s) => s.specialization?.id === activeSpecId)
+  const loadout = match?.loadouts?.find((l) => l.is_active) ?? match?.loadouts?.[0]
+  const tree = loadout?.selected_hero_talent_tree
+  if (!tree) return {}
+  const resolvedName = typeof tree.name === 'string' ? tree.name : tree.name?.en_US
+  return { id: tree.id, name: resolvedName }
+}
+
 export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Report {
   const player = raw.sim.players[0]
   const opts = raw.sim.options
@@ -147,6 +174,7 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
   }
 
   const setBonus = detectSetBonus(player.gear ?? {})
+  const heroTree = extractSelectedHeroTree(raw, getSpecId(player.specialization))
 
   return {
     id: reportId,
@@ -181,6 +209,8 @@ export function parseRaidbotsData(reportId: string, raw: RaidbotsRawData): Repor
     gains,
     timelineDps,
     resourceTimelines,
+    selectedHeroTreeId: heroTree.id,
+    selectedHeroName: heroTree.name,
   }
 }
 

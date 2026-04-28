@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    # Weekly check that the cached SimC slot map still matches upstream.
+    # Runs Mondays at 12:00 UTC.
+    - cron: '0 12 * * 1'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run src/lib/__tests__/decoder-regression.test.ts
+      - run: npm run lint
+
+  slot-map-freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Regenerate slot map from current SimC source
+        run: npm run generate:simc-nodes
+      - name: Verify decoder still passes against fresh slot map
+        run: npx vitest run src/lib/__tests__/decoder-regression.test.ts
+      - name: Fail if committed JSON drifted from upstream
+        run: |
+          if ! git diff --exit-code src/data/simc-slot-maps.json; then
+            echo "::error file=src/data/simc-slot-maps.json::Slot map is out of sync with SimC. Run 'npm run generate:simc-nodes' locally and commit the result."
+            git --no-pager diff --stat src/data/simc-slot-maps.json
+            exit 1
+          fi

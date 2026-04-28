@@ -9,6 +9,35 @@ export interface RaidbotsRawData {
     }
     players: RaidbotsPlayer[]
   }
+  /**
+   * Raidbots-specific metadata. Carries Blizzard's authoritative loadout
+   * data — including the selected hero spec by ID and name — bypassing the
+   * brittle bit-string decoder for fields where Blizzard already gives us
+   * the answer.
+   */
+  simbot?: {
+    meta?: {
+      rawFormData?: {
+        character?: {
+          v2?: {
+            specializations?: {
+              specializations?: Array<{
+                /** Identifies the spec this entry describes (id matches Blizzard spec IDs). */
+                specialization?: { id?: number; name?: string }
+                loadouts?: Array<{
+                  is_active?: boolean
+                  selected_hero_talent_tree?: {
+                    id?: number
+                    name?: string | { en_US?: string }
+                  }
+                }>
+              }>
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 export interface RaidbotsPlayer {
@@ -133,6 +162,14 @@ export interface Report {
   gains: ParsedGain[]
   timelineDps: number[]                          // one DPS value per second
   resourceTimelines: Record<string, number[]>    // resource name → per-second values
+  /**
+   * Blizzard's authoritative active hero spec, sourced from the Raidbots
+   * loadout payload (not the talent bitstream). Populated when the report
+   * contains the `simbot.meta.rawFormData...` envelope. Prefer over
+   * decoder-based hero detection when available.
+   */
+  selectedHeroTreeId?: number
+  selectedHeroName?: string
 }
 
 export interface ParsedAbility {

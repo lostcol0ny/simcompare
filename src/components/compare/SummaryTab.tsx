@@ -118,7 +118,10 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
       return { name: '', iconUrl: '' }
     }
 
-    const activeHeroName = detectHeroTree([rawSelections], treeData)
+    // Prefer Blizzard's authoritative name from the Raidbots envelope; only
+    // fall back to decoder detection when the report didn't carry it.
+    const activeHeroName =
+      report.selectedHeroName ?? detectHeroTree([rawSelections], treeData)
     if (!activeHeroName) return { name: '', iconUrl: '' }
 
     const activeTree = treeData.heroTrees.find((t) => t.name === activeHeroName)

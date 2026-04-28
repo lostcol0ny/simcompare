@@ -259,6 +259,93 @@ describe('parseRaidbotsData', () => {
     const result = parseRaidbotsData('abc123', MOCK_RAW)
     expect(result.abilities[0].percentOfTotal).toBeGreaterThan(0)
   })
+
+  it('passes through hero spec for the actively-simmed spec, ignoring other specs in the envelope', () => {
+    // Mirrors real Raidbots data: every spec the character has loadouts for
+    // appears, each with its own active loadout. Demonology Warlock is being
+    // simmed (spec 266) — picking the first entry blindly would return
+    // Affliction's hero spec instead.
+    const withHero: RaidbotsRawData = {
+      ...MOCK_RAW,
+      simbot: {
+        meta: {
+          rawFormData: {
+            character: {
+              v2: {
+                specializations: {
+                  specializations: [
+                    { specialization: { id: 265, name: 'Affliction' },  loadouts: [{ is_active: true, selected_hero_talent_tree: { id: 58, name: 'Hellcaller' } }] },
+                    { specialization: { id: 266, name: 'Demonology' },  loadouts: [{ is_active: true, selected_hero_talent_tree: { id: 59, name: 'Diabolist' } }] },
+                    { specialization: { id: 267, name: 'Destruction' }, loadouts: [{ is_active: true, selected_hero_talent_tree: { id: 57, name: 'Soul Harvester' } }] },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    }
+    const result = parseRaidbotsData('abc123', withHero)
+    expect(result.selectedHeroTreeId).toBe(59)
+    expect(result.selectedHeroName).toBe('Diabolist')
+  })
+
+  it('handles localized hero name objects ({ en_US })', () => {
+    const localized: RaidbotsRawData = {
+      ...MOCK_RAW,
+      sim: {
+        ...MOCK_RAW.sim,
+        players: [{ ...MOCK_RAW.sim.players[0], specialization: 'Unholy Death Knight' }],
+      },
+      simbot: {
+        meta: {
+          rawFormData: {
+            character: {
+              v2: {
+                specializations: {
+                  specializations: [
+                    { specialization: { id: 252, name: 'Unholy' }, loadouts: [{ is_active: true, selected_hero_talent_tree: { id: 32, name: { en_US: 'Rider of the Apocalypse' } } }] },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    }
+    const result = parseRaidbotsData('abc123', localized)
+    expect(result.selectedHeroName).toBe('Rider of the Apocalypse')
+  })
+
+  it('leaves hero fields undefined when simbot envelope is absent', () => {
+    const result = parseRaidbotsData('abc123', MOCK_RAW)
+    expect(result.selectedHeroTreeId).toBeUndefined()
+    expect(result.selectedHeroName).toBeUndefined()
+  })
+
+  it('leaves hero fields undefined when no envelope entry matches the simmed spec', () => {
+    const mismatched: RaidbotsRawData = {
+      ...MOCK_RAW,
+      simbot: {
+        meta: {
+          rawFormData: {
+            character: {
+              v2: {
+                specializations: {
+                  specializations: [
+                    { specialization: { id: 265, name: 'Affliction' }, loadouts: [{ is_active: true, selected_hero_talent_tree: { id: 58, name: 'Hellcaller' } }] },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    }
+    const result = parseRaidbotsData('abc123', mismatched)
+    expect(result.selectedHeroTreeId).toBeUndefined()
+    expect(result.selectedHeroName).toBeUndefined()
+  })
 })
 
 describe('fetchReport', () => {
