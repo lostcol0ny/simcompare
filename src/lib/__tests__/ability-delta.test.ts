@@ -37,8 +37,11 @@ describe('computeAbilityDeltas', () => {
   })
 
   it('accounts for every point of the total, including truncated rows', () => {
+    expect(computeAbilityDeltas(baseline, compared).remainder).toBe(-15_568)
+
     const { rows, remainder, total } = computeAbilityDeltas(baseline, compared, 1)
     expect(rows).toHaveLength(1)
+    expect(remainder).toBe(-14_468)
     expect(rows.reduce((sum, r) => sum + r.delta, 0) + remainder).toBe(total)
   })
 
