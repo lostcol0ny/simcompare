@@ -47,7 +47,7 @@ export function StickyHeader({ reports }: Props) {
       <div className="flex items-center justify-between px-4 py-2 gap-4">
         <span className="text-sm font-bold text-accent-light shrink-0">SimCompare</span>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-xs overflow-x-auto">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-xs sm:overflow-x-auto">
           {reports.map((r, i) => (
             <span key={r.id} className="flex items-center gap-1.5 shrink-0 w-full sm:w-auto">
               <span className="text-text-muted">{LABELS[i]}:</span>

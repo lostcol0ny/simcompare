@@ -23,7 +23,6 @@ export function BuffsTab({ reports }: Props) {
   ]
 
   return (
-    <div className="table-scroll" tabIndex={0} role="region" aria-label="Buffs and resources">
     <div className="p-4 space-y-8">
       {/* Buff uptime comparison bars */}
       <div>
@@ -136,13 +135,21 @@ export function BuffsTab({ reports }: Props) {
       {/* Resource gains detail */}
       <div>
         <p className="text-xs text-text-faint uppercase tracking-wide mb-3">Resource Gains by Source</p>
-        <div className="border border-border rounded-lg overflow-hidden">
+        {/* Only this grid overflows; the uptime/efficiency bars above are
+            flex-1 and always fit. No overflow-hidden — it would become the
+            sticky containing block and stop .pin-col from pinning. */}
+        <div
+          className="table-scroll border border-border rounded-lg"
+          tabIndex={0}
+          role="region"
+          aria-label="Buffs and resources"
+        >
           {/* Header */}
           <div
             className="grid bg-surface border-b border-border text-xs text-text-faint px-3 py-1.5"
             style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr)` }}
           >
-            <span>Source · Resource</span>
+            <span className="pin-col">Source · Resource</span>
             {reports.map((r, i) => (
               <span key={i} className="text-right" style={{ color: REPORT_COLORS[i] }}>
                 {LABELS[i]} — {r.characterName}
@@ -158,7 +165,7 @@ export function BuffsTab({ reports }: Props) {
                 className="grid items-start border-b border-border last:border-0 px-3 py-2 bg-surface row-hover"
                 style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr)` }}
               >
-                <span className="text-text-secondary text-xs truncate pr-2 pt-0.5">{label}</span>
+                <span className="pin-col text-text-secondary text-xs truncate pr-2 pt-0.5">{label}</span>
                 {reports.map((r, i) => {
                   const gain = r.gains.find((g) => g.source === source && g.resource === resource)
                   if (!gain) return (
@@ -182,7 +189,6 @@ export function BuffsTab({ reports }: Props) {
           })}
         </div>
       </div>
-    </div>
     </div>
   )
 }

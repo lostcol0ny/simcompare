@@ -94,13 +94,15 @@ body {
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
-.table-scroll > table {
+/* These grids are CSS grid, not <table>. Their `1fr` columns would otherwise
+   compress to fit and never overflow, so overflow-x would never engage. */
+.table-scroll > * {
   min-width: max-content;
 }
 
-/* Pin the name column so it stays readable while figures scroll under it. */
-.table-scroll th:first-child,
-.table-scroll td:first-child {
+/* Pin the name column so it stays readable while figures scroll under it.
+   Opt-in class: there are no <th>/<td> in these components to key off. */
+.table-scroll .pin-col {
   position: sticky;
   left: 0;
   z-index: 1;

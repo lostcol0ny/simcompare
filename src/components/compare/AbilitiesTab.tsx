@@ -41,7 +41,9 @@ export function AbilitiesTab({ reports }: Props) {
 
   return (
     <div data-no-grid-click>
-      {/* Ability breakdown chart */}
+      {/* Ability breakdown chart — skipped entirely when there is nothing to
+          plot, since the height formula would collapse to 40px. */}
+      {topRows.length > 0 && (
       <div className="px-4 pt-5 pb-4 border-b border-border">
         <p className="text-xs text-text-faint uppercase tracking-wide mb-4">
           Top Abilities — DPS Contribution
@@ -107,6 +109,7 @@ export function AbilitiesTab({ reports }: Props) {
           </BarChart>
         </ResponsiveContainer>
       </div>
+      )}
 
       {/* Cast efficiency scatter */}
       <div className="px-4 pt-5 pb-4 border-b border-border">
@@ -198,7 +201,7 @@ export function AbilitiesTab({ reports }: Props) {
           className="grid px-4 py-1.5 bg-surface border-b border-border text-xs text-text-faint uppercase tracking-wide"
           style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 60px 70px 80px` }}
         >
-          <span>Ability</span>
+          <span className="pin-col">Ability</span>
           {reports.map((r, i) => (
             <span key={r.id} className="text-right" style={{ color: REPORT_COLORS[i] }}>
               {LABELS[i]} — {r.characterName}
@@ -260,7 +263,7 @@ function AbilityRowComponent({
           paddingRight: '16px',
         }}
       >
-        <div className="flex items-center gap-1 min-w-0">
+        <div className="pin-col flex items-center gap-1 min-w-0">
           {isChild && (
             <span className="text-text-faint mr-0.5 text-xs shrink-0">└</span>
           )}

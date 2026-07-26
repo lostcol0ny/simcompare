@@ -20,7 +20,6 @@ export function StatsTab({ reports }: Props) {
   ]
 
   return (
-    <div className="table-scroll" tabIndex={0} role="region" aria-label="Stat comparison">
     <div className="p-4 max-w-4xl mx-auto">
       {/* Secondary stats radar */}
       <div className="mb-8">
@@ -79,6 +78,8 @@ export function StatsTab({ reports }: Props) {
         </div>
       </div>
 
+      {/* Only the stat grids overflow; the radar chart above does not. */}
+      <div className="table-scroll" tabIndex={0} role="region" aria-label="Stat comparison">
       <Section title="Fight Conditions">
         <StatRow label="Fight Style" values={reports.map((r) => r.fightStyle)} reports={reports} />
         <StatRow label="Targets" values={reports.map((r) => String(r.targetCount))} reports={reports} />
@@ -134,7 +135,7 @@ export function StatsTab({ reports }: Props) {
           reports={reports}
         />
       </Section>
-    </div>
+      </div>
     </div>
   )
 }
@@ -143,7 +144,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div className="mb-6">
       <h3 className="text-xs text-text-faint uppercase tracking-wide mb-2">{title}</h3>
-      <div className="border border-border rounded-lg overflow-hidden">{children}</div>
+      {/* No overflow-hidden: it would become the sticky containing block and
+          stop .pin-col from pinning against the .table-scroll ancestor. */}
+      <div className="border border-border rounded-lg">{children}</div>
     </div>
   )
 }
@@ -168,7 +171,7 @@ function StatRow({
       className="grid border-b border-border last:border-0 text-sm row-hover"
       style={{ gridTemplateColumns: `160px repeat(${reports.length}, 1fr)` }}
     >
-      <span className="px-3 py-2 text-xs text-text-faint border-r border-border bg-surface">
+      <span className="pin-col px-3 py-2 text-xs text-text-faint border-r border-border bg-surface">
         {label}
       </span>
       {values.map((v, i) => {
