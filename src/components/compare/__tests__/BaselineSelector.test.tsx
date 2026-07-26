@@ -1,5 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { BaselineSelector } from '../BaselineSelector'
 import type { Report } from '@/lib/types'
 
@@ -22,10 +21,10 @@ describe('BaselineSelector', () => {
     expect(within(compared).queryByRole('option', { name: /Diabolist/ })).not.toBeInTheDocument()
   })
 
-  it('reports the new pairing on change', async () => {
+  it('reports the new pairing on change', () => {
     const onChange = vi.fn()
     render(<BaselineSelector reports={reports} baselineIndex={0} comparedIndex={1} onChange={onChange} />)
-    await userEvent.selectOptions(screen.getByLabelText('Compared with'), '2')
+    fireEvent.change(screen.getByLabelText('Compared with'), { target: { value: '2' } })
     expect(onChange).toHaveBeenCalledWith(0, 2)
   })
 })
