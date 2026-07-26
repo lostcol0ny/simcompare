@@ -1,7 +1,8 @@
 'use client'
 
 import type { Report } from '@/lib/types'
-import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
+import { LABELS } from '@/lib/report-labels'
+import { buildHue } from '@/lib/build-colors'
 
 interface Props {
   reports: Report[]
@@ -40,11 +41,11 @@ export function BuffsTab({ reports }: Props) {
                   const uptime = buff?.uptime ?? 0
                   return (
                     <div key={i} className="flex items-center gap-2">
-                      <span className="text-[10px] w-3 shrink-0" style={{ color: REPORT_COLORS[i] }}>{LABELS[i]}</span>
+                      <span className="text-[10px] w-3 shrink-0" style={{ color: buildHue(i) }}>{LABELS[i]}</span>
                       <div className="flex-1 h-2 bg-surface-overlay rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all"
-                          style={{ width: `${uptime}%`, backgroundColor: REPORT_COLORS[i], opacity: 0.75 }}
+                          style={{ width: `${uptime}%`, backgroundColor: buildHue(i), opacity: 0.75 }}
                         />
                       </div>
                       <span className="text-[11px] text-text-secondary w-12 text-right shrink-0">
@@ -91,7 +92,7 @@ export function BuffsTab({ reports }: Props) {
                         const b = perBuild[i]
                         if (b.total === 0) return (
                           <div key={i} className="flex items-center gap-2">
-                            <span className="text-[10px] w-3 shrink-0" style={{ color: REPORT_COLORS[i] }}>{LABELS[i]}</span>
+                            <span className="text-[10px] w-3 shrink-0" style={{ color: buildHue(i) }}>{LABELS[i]}</span>
                             <span className="text-[11px] text-text-faint">—</span>
                           </div>
                         )
@@ -99,12 +100,12 @@ export function BuffsTab({ reports }: Props) {
                         const usedFrac = b.total > 0 ? (b.actual / b.total) * 100 : 100
                         return (
                           <div key={i} className="flex items-center gap-2">
-                            <span className="text-[10px] w-3 shrink-0" style={{ color: REPORT_COLORS[i] }}>{LABELS[i]}</span>
+                            <span className="text-[10px] w-3 shrink-0" style={{ color: buildHue(i) }}>{LABELS[i]}</span>
                             <div className="flex-1 h-2 bg-surface-overlay rounded-full overflow-hidden">
                               <div className="h-full flex rounded-full" style={{ width: `${barW}%` }}>
                                 <div
                                   className="h-full rounded-l-full"
-                                  style={{ width: `${usedFrac}%`, backgroundColor: REPORT_COLORS[i], opacity: 0.75 }}
+                                  style={{ width: `${usedFrac}%`, backgroundColor: buildHue(i), opacity: 0.75 }}
                                 />
                                 {b.overflow > 0 && (
                                   <div
@@ -151,7 +152,7 @@ export function BuffsTab({ reports }: Props) {
           >
             <span className="pin-col">Source · Resource</span>
             {reports.map((r, i) => (
-              <span key={i} className="text-right" style={{ color: REPORT_COLORS[i] }}>
+              <span key={i} className="text-right" style={{ color: buildHue(i) }}>
                 {LABELS[i]} — {r.characterName}
               </span>
             ))}

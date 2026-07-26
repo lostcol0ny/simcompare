@@ -5,7 +5,8 @@ import type { Report, TalentTreeData } from '@/lib/types'
 import { getClassColor } from '@/lib/wow-icons'
 import { getSpecId } from '@/lib/spec-ids'
 import { decodeTalentString } from '@/lib/talent-string'
-import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
+import { LABELS } from '@/lib/report-labels'
+import { buildHue, buildFill } from '@/lib/build-colors'
 import { buildSlotMap, detectHeroTree } from '@/lib/talent-decode'
 
 interface Props {
@@ -216,7 +217,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                   <p className="text-xs text-text-faint uppercase tracking-wide">
                     <span
                       className="inline-block w-4 h-4 rounded-full mr-1 align-middle"
-                      style={{ backgroundColor: REPORT_COLORS[i] }}
+                      style={{ backgroundColor: buildHue(i) }}
                     />
                     {LABELS[i]}
                   </p>
@@ -282,9 +283,9 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                     <span
                       className="px-1.5 py-0.5 rounded text-xs font-medium"
                       style={{
-                        color: REPORT_COLORS[i],
-                        backgroundColor: `${REPORT_COLORS[i]}18`,
-                        border: `1px solid ${REPORT_COLORS[i]}40`,
+                        color: buildHue(i),
+                        backgroundColor: buildFill(i, 0.09),
+                        border: `1px solid ${buildHue(i)}40`,
                       }}
                     >
                       {r.setBonus.pieces}pc {r.setBonus.setName}
@@ -313,21 +314,21 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                   <g key={i}>
                     <path
                       d={buildDistributionFill(r.dps, r.dpsRawStdDev, xMin, xMax, DIST_W, DIST_H, maxPdf)}
-                      fill={REPORT_COLORS[i]}
+                      fill={buildHue(i)}
                       fillOpacity={0.12}
                     />
                     <path
                       d={buildDistributionPath(r.dps, r.dpsRawStdDev, xMin, xMax, DIST_W, DIST_H, maxPdf)}
                       fill="none"
-                      stroke={REPORT_COLORS[i]}
+                      stroke={buildHue(i)}
                       strokeWidth={2}
                     />
                     {(() => {
                       const mx = ((r.dps - xMin) / (xMax - xMin)) * DIST_W
                       return (
                         <>
-                          <line x1={mx} y1={0} x2={mx} y2={DIST_H} stroke={REPORT_COLORS[i]} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
-                          <text x={mx} y={12} fill={REPORT_COLORS[i]} fontSize={9} textAnchor="middle">{fmtK(r.dps)}</text>
+                          <line x1={mx} y1={0} x2={mx} y2={DIST_H} stroke={buildHue(i)} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
+                          <text x={mx} y={12} fill={buildHue(i)} fontSize={9} textAnchor="middle">{fmtK(r.dps)}</text>
                         </>
                       )
                     })()}
@@ -348,7 +349,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                       if (i === leaderIdx) return null
                       const prob = overlapProbability(reports[leaderIdx].dps, reports[leaderIdx].dpsRawStdDev, r.dps, r.dpsRawStdDev)
                       return (
-                        <div key={i} className="font-semibold" style={{ color: REPORT_COLORS[i] }}>
+                        <div key={i} className="font-semibold" style={{ color: buildHue(i) }}>
                           {(prob * 100).toFixed(1)}% <span className="text-[9px] text-text-faint font-normal">chance {LABELS[i]} beats {LABELS[leaderIdx]}</span>
                         </div>
                       )
@@ -359,7 +360,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                   <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">DPS Range (95% CI)</div>
                   <div className="text-[13px] font-medium space-y-0.5">
                     {reports.map((r, i) => (
-                      <div key={i} style={{ color: REPORT_COLORS[i] }}>
+                      <div key={i} style={{ color: buildHue(i) }}>
                         {LABELS[i]}: {fmtK(r.dps - 1.96 * r.dpsRawStdDev)} – {fmtK(r.dps + 1.96 * r.dpsRawStdDev)}
                       </div>
                     ))}
@@ -371,7 +372,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                     {reports.map((r, i) => {
                       const cvPct = r.dps > 0 ? (r.dpsRawStdDev / r.dps) * 100 : 0
                       return (
-                        <div key={i} style={{ color: REPORT_COLORS[i] }}>
+                        <div key={i} style={{ color: buildHue(i) }}>
                           {LABELS[i]}: ±{fmtK(r.dpsRawStdDev)} <span className="text-[9px] text-text-faint">({cvPct.toFixed(1)}%)</span>
                         </div>
                       )
@@ -392,10 +393,10 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
               {LABELS[i]} Stats
             </p>
             <div className="space-y-1 text-xs">
-              <StatBar label="Haste" value={r.buffedStats.spellHaste} color={REPORT_COLORS[i]} />
-              <StatBar label="Crit" value={r.buffedStats.spellCrit} color={REPORT_COLORS[i]} />
-              <StatBar label="Mastery" value={r.buffedStats.mastery} color={REPORT_COLORS[i]} />
-              <StatBar label="Vers" value={r.buffedStats.versatility} color={REPORT_COLORS[i]} />
+              <StatBar label="Haste" value={r.buffedStats.spellHaste} color={buildHue(i)} />
+              <StatBar label="Crit" value={r.buffedStats.spellCrit} color={buildHue(i)} />
+              <StatBar label="Mastery" value={r.buffedStats.mastery} color={buildHue(i)} />
+              <StatBar label="Vers" value={r.buffedStats.versatility} color={buildHue(i)} />
             </div>
           </div>
         ))}

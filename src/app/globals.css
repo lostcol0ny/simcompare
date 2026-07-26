@@ -71,12 +71,13 @@ body {
   position: relative;
 }
 
-/* Subtle purple row hover used across all tabs */
+/* Subtle row hover used across all tabs — derives from the accent token so
+   it tracks any future token change without needing a second edit here. */
 .row-hover {
   transition: background-color 0.15s ease;
 }
 .row-hover:hover {
-  background-color: rgba(124, 58, 237, 0.12) !important;
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -6,8 +6,8 @@ import {
   ResponsiveContainer, Tooltip, Legend,
 } from 'recharts'
 import type { Report } from '@/lib/types'
-import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
-import { BUILD_COLORS } from '@/lib/report-labels'
+import { LABELS } from '@/lib/report-labels'
+import { buildHue } from '@/lib/build-colors'
 
 import { ReferenceArea } from 'recharts'
 
@@ -205,7 +205,7 @@ export function TimelineTab({ reports }: Props) {
                     key={`burst-${ri}-${bi}`}
                     x1={b.start}
                     x2={b.end}
-                    fill={REPORT_COLORS[ri]}
+                    fill={buildHue(ri)}
                     fillOpacity={0.06}
                     stroke="none"
                   />
@@ -216,8 +216,8 @@ export function TimelineTab({ reports }: Props) {
                   key={i}
                   type="monotone"
                   dataKey={LABELS[i]}
-                  stroke={REPORT_COLORS[i]}
-                  fill={REPORT_COLORS[i]}
+                  stroke={buildHue(i)}
+                  fill={buildHue(i)}
                   fillOpacity={0.08}
                   strokeWidth={1.5}
                   dot={false}
@@ -236,7 +236,7 @@ export function TimelineTab({ reports }: Props) {
                   {reports.map((_, ri) => (
                     <span key={ri}>
                       {ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}
-                      <span style={{ color: REPORT_COLORS[ri] }}>{LABELS[ri]}: {burstsPerBuild[ri].length}</span>
+                      <span style={{ color: buildHue(ri) }}>{LABELS[ri]}: {burstsPerBuild[ri].length}</span>
                     </span>
                   ))}
                 </div>
@@ -246,13 +246,13 @@ export function TimelineTab({ reports }: Props) {
                 <div className="text-sm font-semibold">
                   {reports.map((_, ri) => {
                     const bursts = burstsPerBuild[ri]
-                    if (bursts.length === 0) return <span key={ri}>{ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}<span style={{ color: REPORT_COLORS[ri] }}>{LABELS[ri]}: —</span></span>
+                    if (bursts.length === 0) return <span key={ri}>{ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}<span style={{ color: buildHue(ri) }}>{LABELS[ri]}: —</span></span>
                     const avgPeak = bursts.reduce((s, b) => s + b.peak, 0) / bursts.length
                     const pctAbove = ((avgPeak - baselines[ri]) / baselines[ri]) * 100
                     return (
                       <span key={ri}>
                         {ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}
-                        <span style={{ color: REPORT_COLORS[ri] }}>{LABELS[ri]}: {fmtK(avgPeak)} <span className="text-[9px] text-text-faint">(+{pctAbove.toFixed(0)}%)</span></span>
+                        <span style={{ color: buildHue(ri) }}>{LABELS[ri]}: {fmtK(avgPeak)} <span className="text-[9px] text-text-faint">(+{pctAbove.toFixed(0)}%)</span></span>
                       </span>
                     )
                   })}
@@ -263,12 +263,12 @@ export function TimelineTab({ reports }: Props) {
                 <div className="text-sm font-semibold">
                   {reports.map((_, ri) => {
                     const bursts = burstsPerBuild[ri]
-                    if (bursts.length === 0) return <span key={ri}>{ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}<span style={{ color: REPORT_COLORS[ri] }}>{LABELS[ri]}: —</span></span>
+                    if (bursts.length === 0) return <span key={ri}>{ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}<span style={{ color: buildHue(ri) }}>{LABELS[ri]}: —</span></span>
                     const avgDur = bursts.reduce((s, b) => s + (b.end - b.start), 0) / bursts.length
                     return (
                       <span key={ri}>
                         {ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}
-                        <span style={{ color: REPORT_COLORS[ri] }}>{LABELS[ri]}: ~{Math.round(avgDur)}s</span>
+                        <span style={{ color: buildHue(ri) }}>{LABELS[ri]}: ~{Math.round(avgDur)}s</span>
                       </span>
                     )
                   })}
@@ -304,7 +304,7 @@ export function TimelineTab({ reports }: Props) {
                       {summary.avgLevel.map((v, ri) => (
                         <span key={ri}>
                           {ri > 0 && <span className="text-text-faint text-xs font-normal"> / </span>}
-                          <span style={{ color: BUILD_COLORS[ri % BUILD_COLORS.length].border }}>{v}</span>
+                          <span style={{ color: buildHue(ri) }}>{v}</span>
                         </span>
                       ))}
                     </div>
@@ -315,7 +315,7 @@ export function TimelineTab({ reports }: Props) {
                       {summary.totalGenerated.map((v, ri) => (
                         <span key={ri}>
                           {ri > 0 && <span className="text-text-faint text-xs font-normal"> / </span>}
-                          <span style={{ color: BUILD_COLORS[ri % BUILD_COLORS.length].border }}>
+                          <span style={{ color: buildHue(ri) }}>
                             {Math.round(v * 10) / 10}
                           </span>
                         </span>
@@ -329,7 +329,7 @@ export function TimelineTab({ reports }: Props) {
                         {summary.overflow.map((v, ri) => (
                           <span key={ri}>
                             {ri > 0 && <span className="text-text-faint text-xs font-normal"> / </span>}
-                            <span style={{ color: BUILD_COLORS[ri % BUILD_COLORS.length].border }}>
+                            <span style={{ color: buildHue(ri) }}>
                               {Math.round(v * 10) / 10}
                             </span>
                           </span>
@@ -386,7 +386,7 @@ export function TimelineTab({ reports }: Props) {
                         key={i}
                         type="stepAfter"
                         dataKey={LABELS[i]}
-                        stroke={REPORT_COLORS[i]}
+                        stroke={buildHue(i)}
                         strokeWidth={1.5}
                         dot={false}
                         activeDot={{ r: 3 }}

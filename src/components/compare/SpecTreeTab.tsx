@@ -5,7 +5,7 @@ import type { Report, TalentTreeData, TalentNode, SelectedTalent } from '@/lib/t
 import { decodeTalentString } from '@/lib/talent-string'
 import { getSpecId } from '@/lib/spec-ids'
 import { LABELS } from '@/lib/report-labels'
-import { BUILD_COLORS } from '@/lib/report-labels'
+import { buildHue, buildFill } from '@/lib/build-colors'
 import { buildSlotMap, mapSelections, detectHeroTree, filterInactiveHeroNodes } from '@/lib/talent-decode'
 import { WowheadTooltipLoader, WowheadSpellLink, refreshWowheadLinks } from '@/components/WowheadTooltip'
 
@@ -16,15 +16,14 @@ interface Props {
 // ── Diff cell ────────────────────────────────────────────────────────────────
 
 function DiffCell({ selected, colorIndex }: { selected: boolean; colorIndex: number }) {
-  const color = BUILD_COLORS[colorIndex % BUILD_COLORS.length]
   return (
     <td className="px-1 py-1.5">
       <div
         className="w-[30px] h-[22px] rounded mx-auto"
         style={
           selected
-            ? { background: color.fill, border: `1px solid ${color.border}` }
-            : { border: '1px solid #334155' }
+            ? { background: buildFill(colorIndex), border: `1px solid ${buildHue(colorIndex)}` }
+            : { border: '1px solid var(--color-border-subtle)' }
         }
       />
     </td>
@@ -135,7 +134,7 @@ function SectionList({ title, nodes, selections, labels, diffsOnly }: SectionPro
               <th
                 key={l}
                 className="px-1 py-1.5 text-center font-normal w-[42px]"
-                style={{ color: BUILD_COLORS[i % BUILD_COLORS.length].border }}
+                style={{ color: buildHue(i) }}
               >
                 {l}
               </th>
@@ -272,8 +271,8 @@ export function SpecTreeTab({ reports }: Props) {
               <span
                 className="inline-block w-3 h-3 rounded-sm"
                 style={{
-                  background: BUILD_COLORS[i % BUILD_COLORS.length].fill,
-                  border: `1px solid ${BUILD_COLORS[i % BUILD_COLORS.length].border}`,
+                  background: buildFill(i),
+                  border: `1px solid ${buildHue(i)}`,
                 }}
               />
               <span className="text-text-muted">{l}</span>

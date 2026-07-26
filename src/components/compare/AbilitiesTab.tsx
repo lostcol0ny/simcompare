@@ -8,7 +8,8 @@ import {
 } from 'recharts'
 import type { Report } from '@/lib/types'
 import { buildAbilityRows, type AbilityRow } from '@/lib/abilities'
-import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
+import { LABELS } from '@/lib/report-labels'
+import { buildHue, buildFill } from '@/lib/build-colors'
 
 interface Props {
   reports: Report[]
@@ -96,7 +97,7 @@ export function AbilitiesTab({ reports }: Props) {
               }}
             />
             {reports.map((r, i) => (
-              <Bar key={r.id} dataKey={LABELS[i]} fill={REPORT_COLORS[i]} fillOpacity={0.85} radius={[0, 3, 3, 0]}>
+              <Bar key={r.id} dataKey={LABELS[i]} fill={buildHue(i)} fillOpacity={0.85} radius={[0, 3, 3, 0]}>
                 <LabelList
                   dataKey={LABELS[i]}
                   position="right"
@@ -182,7 +183,7 @@ export function AbilitiesTab({ reports }: Props) {
                   key={r.id}
                   name={LABELS[i]}
                   data={scatterData}
-                  fill={REPORT_COLORS[i]}
+                  fill={buildHue(i)}
                   fillOpacity={0.7}
                 />
               )
@@ -203,7 +204,7 @@ export function AbilitiesTab({ reports }: Props) {
         >
           <span className="pin-col">Ability</span>
           {reports.map((r, i) => (
-            <span key={r.id} className="text-right" style={{ color: REPORT_COLORS[i] }}>
+            <span key={r.id} className="text-right" style={{ color: buildHue(i) }}>
               {LABELS[i]} — {r.characterName}
             </span>
           ))}
@@ -311,9 +312,9 @@ function AbilityRowComponent({
                   <span
                     className="ml-1 text-xs px-1 rounded"
                     style={{
-                      color: REPORT_COLORS[i],
-                      border: `1px solid ${REPORT_COLORS[i]}33`,
-                      backgroundColor: `${REPORT_COLORS[i]}11`,
+                      color: buildHue(i),
+                      border: `1px solid ${buildHue(i)}33`,
+                      backgroundColor: buildFill(i, 0.07),
                     }}
                   >
                     {LABELS[i]} only

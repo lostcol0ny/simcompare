@@ -5,7 +5,8 @@ import {
   PolarRadiusAxis, ResponsiveContainer, Legend, Tooltip,
 } from 'recharts'
 import type { Report } from '@/lib/types'
-import { LABELS, REPORT_COLORS } from '@/lib/report-labels'
+import { LABELS } from '@/lib/report-labels'
+import { buildHue } from '@/lib/build-colors'
 
 interface Props {
   reports: Report[]
@@ -66,11 +67,11 @@ export function StatsTab({ reports }: Props) {
                   key={i}
                   name={LABELS[i]}
                   dataKey={LABELS[i]}
-                  stroke={REPORT_COLORS[i]}
-                  fill={REPORT_COLORS[i]}
+                  stroke={buildHue(i)}
+                  fill={buildHue(i)}
                   fillOpacity={0.15}
                   strokeWidth={2}
-                  dot={{ fill: REPORT_COLORS[i], r: 3 }}
+                  dot={{ fill: buildHue(i), r: 3 }}
                 />
               ))}
             </RadarChart>
