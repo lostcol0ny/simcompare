@@ -28,6 +28,8 @@
   --color-text-secondary: #94a3b8;
   --color-text-muted: #64748b;
   --color-text-faint: #475569;
+
+  --color-focus: #f8fafc;
 }
 
 :root {
@@ -38,6 +40,12 @@ body {
   background-color: #050510;
   color: var(--color-text-primary);
   position: relative;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* Tab panel scale+fade transitions */
