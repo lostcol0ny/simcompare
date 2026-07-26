@@ -36,6 +36,7 @@ export function GridBackground() {
   const lastTimeRef = useRef(0)
 
   const handleClick = useCallback((e: MouseEvent) => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     if ((e.target as HTMLElement).closest('[data-no-grid-click]')) return
     const canvas = canvasRef.current
     if (!canvas) return
@@ -64,6 +65,7 @@ export function GridBackground() {
     window.addEventListener('resize', resize)
 
     const handleMouseMove = (e: MouseEvent) => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
       const rect = canvas!.getBoundingClientRect()
       mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
     }
@@ -79,6 +81,7 @@ export function GridBackground() {
     lastTimeRef.current = performance.now()
 
     let animId: number
+    let running = true
 
     function draw(now: number) {
       const dt = Math.min((now - lastTimeRef.current) / 1000, 0.05)
@@ -208,10 +211,32 @@ export function GridBackground() {
         }
       }
 
-      animId = requestAnimationFrame(draw)
+      if (running) animId = requestAnimationFrame(draw)
+    }
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion) {
+      running = false
+      draw(performance.now())   // one static frame; draw() will not reschedule
+      return () => {
+        window.removeEventListener('resize', resize)
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.removeEventListener('mouseleave', handleMouseLeave)
+        window.removeEventListener('click', handleClick)
+      }
     }
 
     animId = requestAnimationFrame(draw)
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(animId)
+      } else {
+        lastTimeRef.current = performance.now()   // discard the elapsed hidden time
+        animId = requestAnimationFrame(draw)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
       cancelAnimationFrame(animId)
@@ -219,6 +244,7 @@ export function GridBackground() {
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseleave', handleMouseLeave)
       window.removeEventListener('click', handleClick)
+      document.removeEventListener('visibilitychange', handleVisibility)
     }
   }, [handleClick])
 

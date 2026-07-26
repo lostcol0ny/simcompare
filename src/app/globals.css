@@ -70,3 +70,13 @@ body {
 .row-hover:hover {
   background-color: rgba(124, 58, 237, 0.12) !important;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-panel {
+    transition: none;
+    transform: none;
+  }
+  .tab-panel.tab-panel-active {
+    transform: none;
+  }
+}
