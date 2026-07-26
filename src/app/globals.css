@@ -88,3 +88,29 @@ body {
     transform: none;
   }
 }
+
+.table-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll > table {
+  min-width: max-content;
+}
+
+/* Pin the name column so it stays readable while figures scroll under it. */
+.table-scroll th:first-child,
+.table-scroll td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--color-surface-raised);
+}
+
+/* Edge fade: signals that the tab bar continues past the viewport. */
+.tab-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+}
+.tab-scroll::-webkit-scrollbar { display: none; }

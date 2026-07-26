@@ -20,6 +20,7 @@ export function StatsTab({ reports }: Props) {
   ]
 
   return (
+    <div className="table-scroll" tabIndex={0} role="region" aria-label="Stat comparison">
     <div className="p-4 max-w-4xl mx-auto">
       {/* Secondary stats radar */}
       <div className="mb-8">
@@ -133,6 +134,7 @@ export function StatsTab({ reports }: Props) {
           reports={reports}
         />
       </Section>
+    </div>
     </div>
   )
 }

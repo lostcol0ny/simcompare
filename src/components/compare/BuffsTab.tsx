@@ -23,6 +23,7 @@ export function BuffsTab({ reports }: Props) {
   ]
 
   return (
+    <div className="table-scroll" tabIndex={0} role="region" aria-label="Buffs and resources">
     <div className="p-4 space-y-8">
       {/* Buff uptime comparison bars */}
       <div>
@@ -181,6 +182,7 @@ export function BuffsTab({ reports }: Props) {
           })}
         </div>
       </div>
+    </div>
     </div>
   )
 }

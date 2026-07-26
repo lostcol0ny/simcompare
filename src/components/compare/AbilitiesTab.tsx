@@ -188,36 +188,38 @@ export function AbilitiesTab({ reports }: Props) {
         </ResponsiveContainer>
       </div>
 
-      {/* Table header */}
-      <div className="px-4 py-2 bg-surface-raised border-b border-border text-xs text-text-muted">
-        Sorted by DPS · <span className="text-accent-light">highest first</span>
-      </div>
+      <div className="table-scroll" tabIndex={0} role="region" aria-label="Ability breakdown">
+        {/* Table header */}
+        <div className="px-4 py-2 bg-surface-raised border-b border-border text-xs text-text-muted">
+          Sorted by DPS · <span className="text-accent-light">highest first</span>
+        </div>
 
-      <div
-        className="grid px-4 py-1.5 bg-surface border-b border-border text-xs text-text-faint uppercase tracking-wide"
-        style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 60px 70px 80px` }}
-      >
-        <span>Ability</span>
-        {reports.map((r, i) => (
-          <span key={r.id} className="text-right" style={{ color: REPORT_COLORS[i] }}>
-            {LABELS[i]} — {r.characterName}
-          </span>
+        <div
+          className="grid px-4 py-1.5 bg-surface border-b border-border text-xs text-text-faint uppercase tracking-wide"
+          style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 60px 70px 80px` }}
+        >
+          <span>Ability</span>
+          {reports.map((r, i) => (
+            <span key={r.id} className="text-right" style={{ color: REPORT_COLORS[i] }}>
+              {LABELS[i]} — {r.characterName}
+            </span>
+          ))}
+          <span className="text-right">CV%</span>
+          <span className="text-right">DPS/Cast</span>
+          <span className="text-center">Δ vs best</span>
+        </div>
+
+        {rows.map((row) => (
+          <AbilityRowComponent
+            key={row.id}
+            row={row}
+            reports={reports}
+            expandedRows={expandedRows}
+            toggleRow={toggleRow}
+            depth={0}
+          />
         ))}
-        <span className="text-right">CV%</span>
-        <span className="text-right">DPS/Cast</span>
-        <span className="text-center">Δ vs best</span>
       </div>
-
-      {rows.map((row) => (
-        <AbilityRowComponent
-          key={row.id}
-          row={row}
-          reports={reports}
-          expandedRows={expandedRows}
-          toggleRow={toggleRow}
-          depth={0}
-        />
-      ))}
     </div>
   )
 }

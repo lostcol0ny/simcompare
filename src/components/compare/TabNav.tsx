@@ -44,7 +44,7 @@ export function TabNav({ active, onChange }: Props) {
       role="tablist"
       aria-label="Comparison views"
       onKeyDown={handleKeyDown}
-      className="bg-surface-raised border-b border-border-subtle flex justify-center px-4 overflow-x-auto"
+      className="bg-surface-raised border-b border-border-subtle flex justify-start sm:justify-center px-4 tab-scroll"
     >
       {TABS.map((tab) => (
         <button

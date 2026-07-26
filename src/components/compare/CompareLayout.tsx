@@ -20,10 +20,10 @@ interface Props {
 }
 
 const CONTENT_MAX_WIDTH: Record<number, string> = {
-  2: 'max-w-2xl',
-  3: 'max-w-4xl',
-  4: 'max-w-6xl',
-  5: 'max-w-7xl',
+  2: 'sm:max-w-2xl',
+  3: 'sm:max-w-4xl',
+  4: 'sm:max-w-6xl',
+  5: 'sm:max-w-7xl',
 }
 
 export function CompareLayout({ reports, onReportsChange }: Props) {
@@ -71,7 +71,7 @@ export function CompareLayout({ reports, onReportsChange }: Props) {
     window.history.replaceState(window.history.state, '', newUrl)
   }, [reports, customNames, router, onReportsChange])
 
-  const maxWidth = CONTENT_MAX_WIDTH[reports.length] ?? 'max-w-6xl'
+  const maxWidth = CONTENT_MAX_WIDTH[reports.length] ?? 'sm:max-w-6xl'
 
   return (
     <div className="min-h-screen flex flex-col" data-no-grid-click>
