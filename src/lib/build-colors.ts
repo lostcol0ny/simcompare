@@ -30,10 +30,16 @@ export function buildHue(index: number): string {
   return BUILD_HUES[index % BUILD_HUES.length]
 }
 
-export function buildFill(index: number, alpha = 0.18): string {
+export function buildRgb(index: number): readonly [number, number, number] {
   const hex = buildHue(index)
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ] as const
+}
+
+export function buildFill(index: number, alpha = 0.18): string {
+  const [r, g, b] = buildRgb(index)
   return `rgb(${r} ${g} ${b} / ${alpha})`
 }

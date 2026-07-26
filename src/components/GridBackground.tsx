@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
+import { buildRgb } from '@/lib/build-colors'
 
 const SPACING = 48
 const DOT_RADIUS = 1.2
@@ -10,9 +11,9 @@ const WAVE_AMP = 4
 const WAVE_SPEED = 0.8
 
 const MOTES = [
-  { x: 0.3, y: 0.4, r: 180, color: [124, 58, 237] as const, speed: 0.15, phase: 0 },
-  { x: 0.7, y: 0.3, r: 140, color: [59, 130, 246] as const, speed: 0.12, phase: 2 },
-  { x: 0.5, y: 0.7, r: 160, color: [74, 222, 128] as const, speed: 0.1, phase: 4 },
+  { x: 0.3, y: 0.4, r: 180, color: buildRgb(0), speed: 0.15, phase: 0 },
+  { x: 0.7, y: 0.3, r: 140, color: buildRgb(1), speed: 0.12, phase: 2 },
+  { x: 0.5, y: 0.7, r: 160, color: buildRgb(2), speed: 0.1,  phase: 4 },
 ]
 
 interface Well {

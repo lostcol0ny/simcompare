@@ -42,23 +42,23 @@ export function ReportInputPage() {
   return (
     <main className="mx-auto max-w-xl px-4 py-16">
       <h1 className="text-2xl font-bold text-text-primary mb-1">SimCompare</h1>
-      <p className="text-text-secondary text-sm mb-8">
+      <p className="text-text-secondary text-body mb-8">
         Compare Raidbots simulation reports side by side.
       </p>
 
       <div className="mb-6">
-        <label className="block text-text-secondary text-xs mb-2">
+        <label className="block text-text-secondary text-label mb-2">
           Paste a Raidbots report URL
         </label>
         <input
           type="text"
           onPaste={handlePaste}
           placeholder="https://www.raidbots.com/simbot/report/…"
-          className="w-full rounded border border-border-subtle bg-surface-raised px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
+          className="w-full rounded border border-border-subtle bg-surface-raised px-3 py-2 text-body text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
           readOnly={false}
         />
         {reports.length >= 6 && (
-          <p className="mt-1.5 text-xs text-text-muted">
+          <p className="mt-1.5 text-fig text-text-muted">
             Displaying many reports may get narrow on smaller screens.
           </p>
         )}
@@ -83,13 +83,13 @@ export function ReportInputPage() {
       <button
         onClick={handleCompare}
         disabled={!canCompare}
-        className="w-full rounded bg-accent px-4 py-2.5 text-sm font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+        className="w-full rounded bg-accent px-4 py-2.5 text-body font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
       >
         Compare Reports
       </button>
 
       {reports.length > 0 && !canCompare && (
-        <p className="mt-3 text-center text-text-muted text-xs">
+        <p className="mt-3 text-center text-text-muted text-fig">
           Add at least 2 valid reports to compare
         </p>
       )}

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { BUILD_HUES, buildHue, buildFill } from '../build-colors'
+import { BUILD_HUES, buildHue, buildFill, buildRgb } from '../build-colors'
 
 const css = readFileSync(path.resolve(__dirname, '../../app/globals.css'), 'utf8')
 
@@ -39,5 +39,12 @@ describe('build colour ramp', () => {
   it('derives fills from the hue rather than hard-coding them', () => {
     expect(buildFill(0)).toBe('rgb(167 139 250 / 0.18)')
     expect(buildFill(0, 0.5)).toBe('rgb(167 139 250 / 0.5)')
+  })
+
+  it('returns numeric rgb triplets for canvas use', () => {
+    expect(buildRgb(0)).toEqual([167, 139, 250])  // #a78bfa violet
+    expect(buildRgb(1)).toEqual([34, 211, 238])   // #22d3ee cyan
+    expect(buildRgb(2)).toEqual([244, 114, 182])  // #f472b6 pink
+    expect(buildRgb(8)).toEqual(buildRgb(0))      // wraps like buildHue
   })
 })

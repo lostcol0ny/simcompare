@@ -29,7 +29,7 @@ export function ReportCard({ label, url, state, onRemove, customName, onNameChan
         : 'bg-surface-raised'
 
   return (
-    <div className={`rounded border ${borderColor} ${bgColor} p-3 text-sm`}>
+    <div className={`rounded border ${borderColor} ${bgColor} p-3 text-body`}>
       <div className="flex items-start justify-between gap-2">
         <span className="font-bold text-accent-light">{label}</span>
         <button
@@ -41,24 +41,24 @@ export function ReportCard({ label, url, state, onRemove, customName, onNameChan
         </button>
       </div>
 
-      <div className="mt-1 truncate text-text-muted text-xs">{url}</div>
+      <div className="mt-1 truncate text-text-muted text-fig">{url}</div>
 
       {state.status === 'loading' && (
-        <div className="mt-2 text-warning text-xs">Loading…</div>
+        <div className="mt-2 text-warning text-fig">Loading…</div>
       )}
 
       {state.status === 'error' && (
-        <div className="mt-2 text-negative text-xs">{state.message}</div>
+        <div className="mt-2 text-negative text-fig">{state.message}</div>
       )}
 
       {state.status === 'valid' && (
         <div className="mt-2 space-y-0.5">
           <div className="text-text-primary font-medium">{state.report.characterName}</div>
-          <div className="text-text-secondary text-xs">{state.report.specialization} · {state.report.race}</div>
+          <div className="text-text-secondary text-fig">{state.report.specialization} · {state.report.race}</div>
           <div className="text-accent-light font-bold">
             {Math.round(state.report.dps).toLocaleString()} DPS
           </div>
-          <div className="text-text-muted text-xs">
+          <div className="text-text-muted text-fig">
             {state.report.fightStyle} · {state.report.targetCount}{' '}
             {state.report.targetCount === 1 ? 'target' : 'targets'} · {state.report.fightDuration}s
           </div>
@@ -68,7 +68,7 @@ export function ReportCard({ label, url, state, onRemove, customName, onNameChan
               value={customName}
               onChange={(e) => onNameChange(e.target.value)}
               placeholder={`Label (default: ${state.report.characterName})`}
-              className="w-full rounded border border-border-subtle bg-surface px-2 py-1 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
+              className="w-full rounded border border-border-subtle bg-surface px-2 py-1 text-body text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
             />
           </div>
         </div>
