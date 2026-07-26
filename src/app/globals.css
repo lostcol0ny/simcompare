@@ -101,12 +101,19 @@ body {
 }
 
 /* Pin the name column so it stays readable while figures scroll under it.
-   Opt-in class: there are no <th>/<td> in these components to key off. */
+   Opt-in class: there are no <th>/<td> in these components to key off.
+
+   `inherit` rather than a fixed colour: this selector is 0-2-0 and would
+   otherwise beat the row's own single-class `bg-surface` (0-1-0), painting
+   every pinned cell the wrong shade at rest. Inheriting copies the parent
+   row's computed colour, so the cell tracks the bg-surface/bg-surface-raised
+   alternation automatically. Every row that hosts a .pin-col must therefore
+   set an opaque background of its own, or the cell turns see-through. */
 .table-scroll .pin-col {
   position: sticky;
   left: 0;
   z-index: 1;
-  background: var(--color-surface-raised);
+  background: inherit;
 }
 
 /* Edge fade: signals that the tab bar continues past the viewport. */

@@ -168,10 +168,12 @@ function StatRow({
 
   return (
     <div
-      className="grid border-b border-border last:border-0 text-sm row-hover"
+      /* bg-surface is required, not decorative: .pin-col below inherits its
+         background from this row, and this grid was previously transparent. */
+      className="grid border-b border-border last:border-0 text-sm row-hover bg-surface"
       style={{ gridTemplateColumns: `160px repeat(${reports.length}, 1fr)` }}
     >
-      <span className="pin-col px-3 py-2 text-xs text-text-faint border-r border-border bg-surface">
+      <span className="pin-col px-3 py-2 text-xs text-text-faint border-r border-border">
         {label}
       </span>
       {values.map((v, i) => {

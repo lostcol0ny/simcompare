@@ -39,13 +39,23 @@ describe.each([
 describe('table-scroll overflow rule', () => {
   const css = readFileSync(resolve(process.cwd(), 'src/app/globals.css'), 'utf8')
 
+  // Held in describe scope so afterEach can remove it. Left in place the tags
+  // accumulate across iterations; harmless while every iteration injects
+  // identical rules, but it would later mask a real regression in the very
+  // test guarding the selector bug.
+  let style: HTMLStyleElement
+
   beforeEach(() => {
     // Only the .table-scroll rules: the full file has @import and @theme
     // blocks that jsdom's CSS parser cannot handle.
     const rules = css.match(/^\.table-scroll[^{]*\{[^}]*\}/gms) ?? []
-    const style = document.createElement('style')
+    style = document.createElement('style')
     style.textContent = rules.join('\n')
     document.head.appendChild(style)
+  })
+
+  afterEach(() => {
+    style.remove()
   })
 
   it('targets the real grid children, not a <table>', () => {
