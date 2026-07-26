@@ -153,7 +153,7 @@ function SectionList({ title, nodes, selections, labels, diffsOnly }: SectionPro
                     {row.name}
                   </WowheadSpellLink>
                   {row.isChoice && (
-                    <span className="text-[9px] text-text-faint bg-surface-overlay px-1.5 py-0.5 rounded">
+                    <span className="label bg-surface-overlay px-1.5 py-0.5 rounded">
                       choice
                     </span>
                   )}

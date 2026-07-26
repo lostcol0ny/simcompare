@@ -45,7 +45,7 @@ export function AbilitiesTab({ reports }: Props) {
       {/* Ability breakdown chart — skipped entirely when there is nothing to
           plot, since the height formula would collapse to 40px. */}
       {topRows.length > 0 && (
-      <div className="px-4 pt-5 pb-4 border-b border-border">
+      <div className="px-4 pt-4 pb-4 border-b border-border">
         <p className="label mb-4">
           Top Abilities — DPS Contribution
         </p>
@@ -82,7 +82,7 @@ export function AbilitiesTab({ reports }: Props) {
                     <p className="font-bold text-text-primary mb-1">{label}</p>
                     {payload.map((p, i) => (
                       <p key={i} style={{ color: p.fill }}>
-                        {String(p.dataKey)}: {Number(p.value).toLocaleString()} DPS
+                        {String(p.dataKey)}: <span className="num">{Number(p.value).toLocaleString()}</span> DPS
                       </p>
                     ))}
                   </div>
@@ -113,7 +113,7 @@ export function AbilitiesTab({ reports }: Props) {
       )}
 
       {/* Cast efficiency scatter */}
-      <div className="px-4 pt-5 pb-4 border-b border-border">
+      <div className="px-4 pt-4 pb-4 border-b border-border">
         <p className="label mb-4">
           Cast Efficiency — DPS per Cast vs Casts per Fight
         </p>
@@ -154,9 +154,9 @@ export function AbilitiesTab({ reports }: Props) {
                   <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-fig shadow-lg">
                     <p className="font-bold text-text-primary">{d.name}</p>
                     <p className="text-text-muted">{d.buildLabel}</p>
-                    <p className="text-text-secondary">{d.casts.toFixed(1)} casts/fight</p>
-                    <p className="text-text-secondary">{d.dpsPerCast >= 1000 ? `${(d.dpsPerCast / 1000).toFixed(1)}k` : Math.round(d.dpsPerCast)} DPS/cast</p>
-                    <p className="text-text-secondary">{Math.round(d.totalDps).toLocaleString()} total DPS</p>
+                    <p className="text-text-secondary"><span className="num">{d.casts.toFixed(1)}</span> casts/fight</p>
+                    <p className="text-text-secondary"><span className="num">{d.dpsPerCast >= 1000 ? `${(d.dpsPerCast / 1000).toFixed(1)}k` : Math.round(d.dpsPerCast)}</span> DPS/cast</p>
+                    <p className="text-text-secondary"><span className="num">{Math.round(d.totalDps).toLocaleString()}</span> total DPS</p>
                   </div>
                 )
               }}

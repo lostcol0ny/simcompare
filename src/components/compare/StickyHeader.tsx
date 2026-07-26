@@ -16,7 +16,8 @@ export function StickyHeader({ reports }: Props) {
   const [addingReport, setAddingReport] = useState(false)
 
   const maxDps = Math.max(...reports.map((r) => r.dps))
-  const leader = reports.find((r) => r.dps === maxDps)
+  const leadIdx = reports.findIndex((r) => r.dps === maxDps)
+  const leader = reports[leadIdx]
   const follower = reports.find((r) => r.dps !== maxDps)
   const delta =
     leader && follower
@@ -54,7 +55,14 @@ export function StickyHeader({ reports }: Props) {
               <span className="text-text-secondary">
                 {r.characterName} ({r.specialization.split(' ')[0]})
               </span>
-              <span className="num font-bold text-accent-light">
+              {/* The leader's total is the one hero figure in the view; every
+                  other total stays at figure size so the scale reads as a
+                  hierarchy rather than a row of equals. */}
+              <span
+                className={`num font-bold text-accent-light ${
+                  i === leadIdx ? 'text-hero leading-none' : ''
+                }`}
+              >
                 {Math.round(r.dps / 1000).toLocaleString()}k
               </span>
             </span>

@@ -24,7 +24,7 @@ export function BuffsTab({ reports }: Props) {
   ]
 
   return (
-    <div className="p-4 space-y-8">
+    <div className="p-4 space-y-6">
       {/* Buff uptime comparison bars */}
       <div>
         <p className="label mb-3">Buff Uptime</p>
@@ -41,7 +41,7 @@ export function BuffsTab({ reports }: Props) {
                   const uptime = buff?.uptime ?? 0
                   return (
                     <div key={i} className="flex items-center gap-2">
-                      <span className="text-[10px] w-3 shrink-0" style={{ color: buildHue(i) }}>{LABELS[i]}</span>
+                      <span className="label w-3 shrink-0" style={{ color: buildHue(i) }}>{LABELS[i]}</span>
                       <div className="flex-1 h-2 bg-surface-overlay rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all"
@@ -92,7 +92,7 @@ export function BuffsTab({ reports }: Props) {
                         const b = perBuild[i]
                         if (b.total === 0) return (
                           <div key={i} className="flex items-center gap-2">
-                            <span className="text-[10px] w-3 shrink-0" style={{ color: buildHue(i) }}>{LABELS[i]}</span>
+                            <span className="label w-3 shrink-0" style={{ color: buildHue(i) }}>{LABELS[i]}</span>
                             <span className="text-fig text-text-faint">—</span>
                           </div>
                         )
@@ -100,7 +100,7 @@ export function BuffsTab({ reports }: Props) {
                         const usedFrac = b.total > 0 ? (b.actual / b.total) * 100 : 100
                         return (
                           <div key={i} className="flex items-center gap-2">
-                            <span className="text-[10px] w-3 shrink-0" style={{ color: buildHue(i) }}>{LABELS[i]}</span>
+                            <span className="label w-3 shrink-0" style={{ color: buildHue(i) }}>{LABELS[i]}</span>
                             <div className="flex-1 h-2 bg-surface-overlay rounded-full overflow-hidden">
                               <div className="h-full flex rounded-full" style={{ width: `${barW}%` }}>
                                 <div
@@ -115,10 +115,10 @@ export function BuffsTab({ reports }: Props) {
                                 )}
                               </div>
                             </div>
-                            <span className="num text-fig text-text-secondary w-24 text-right shrink-0">
+                            <span className="num text-fig text-text-secondary w-32 text-right shrink-0 whitespace-nowrap">
                               {b.actual.toFixed(1)}
                               {b.overflow > 0 && (
-                                <span className="text-negative"> (<span className="num">{b.wastePct.toFixed(0)}%</span> waste)</span>
+                                <span className="font-sans text-negative"> (<span className="num">{b.wastePct.toFixed(0)}%</span> waste)</span>
                               )}
                             </span>
                           </div>

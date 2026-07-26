@@ -175,7 +175,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
           return (
             <div
               key={r.id}
-              className="flex-1 p-5 min-w-0 relative"
+              className="flex-1 p-[18px] min-w-0 relative"
               style={{ background: `linear-gradient(180deg, ${classColor}14 0%, transparent 72px)` }}
             >
               {/* Remove report button */}
@@ -258,7 +258,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
               </div>
 
               <div className="flex items-baseline gap-2">
-                <span className="text-hero num font-bold text-accent-light">
+                <span className="text-head num font-bold text-accent-light">
                   {(r.dps / 1000).toFixed(1)}k
                 </span>
                 {isLeader && reports.length > 1 && (
@@ -306,7 +306,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
         const xMax = Math.max(...reports.map((r) => r.dps + 3.5 * r.dpsRawStdDev))
         const maxPdf = Math.max(...reports.map((r) => normalPDF(r.dps, r.dps, r.dpsRawStdDev)))
         return (
-          <div className="px-4 pt-6 pb-4 border-b border-border">
+          <div className="px-4 pt-4 pb-4 border-b border-border">
             <p className="label mb-4">DPS Distribution</p>
             <div className="bg-surface-raised border border-border rounded-lg p-4">
               <svg viewBox={`0 0 ${DIST_W} ${DIST_H + 20}`} className="w-full" style={{ maxHeight: 220 }}>
@@ -343,7 +343,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
 
               <div className="flex gap-3 mt-3 justify-center">
                 <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                  <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Overlap</div>
+                  <div className="label mb-0.5">Overlap</div>
                   <div className="text-fig">
                     {reports.map((r, i) => {
                       if (i === leaderIdx) return null
@@ -357,7 +357,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                   </div>
                 </div>
                 <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                  <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">DPS Range (95% CI)</div>
+                  <div className="label mb-0.5">DPS Range (95% CI)</div>
                   <div className="text-fig font-medium space-y-0.5">
                     {reports.map((r, i) => (
                       <div key={i} style={{ color: buildHue(i) }}>
@@ -367,7 +367,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                   </div>
                 </div>
                 <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                  <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Consistency</div>
+                  <div className="label mb-0.5">Consistency</div>
                   <div className="text-fig font-medium space-y-0.5">
                     {reports.map((r, i) => {
                       const cvPct = r.dps > 0 ? (r.dpsRawStdDev / r.dps) * 100 : 0

@@ -7,7 +7,7 @@
 
   --color-border: #1e1e2e;
   --color-border-subtle: #2d2d3d;
-  --color-border-hairline: #16162a;
+  --color-hairline: #16162a;
 
   --color-accent: #cbd5e1;
   --color-accent-light: #f1f5f9;
@@ -118,9 +118,9 @@ body {
    `inherit` rather than a fixed colour: this selector is 0-2-0 and would
    otherwise beat the row's own single-class `bg-surface` (0-1-0), painting
    every pinned cell the wrong shade at rest. Inheriting copies the parent
-   row's computed colour, so the cell tracks the bg-surface/bg-surface-raised
-   alternation automatically. Every row that hosts a .pin-col must therefore
-   set an opaque background of its own, or the cell turns see-through. */
+   row's computed colour, so the cell picks up the row's `bg-surface` without
+   restating it. Every row that hosts a .pin-col must therefore set an opaque
+   background of its own, or the cell turns see-through. */
 .table-scroll .pin-col {
   position: sticky;
   left: 0;
@@ -136,10 +136,17 @@ body {
 }
 .tab-scroll::-webkit-scrollbar { display: none; }
 
+/* Martian Mono's `wdth` fvar default is 112.5 (its maximum). Left unset, any
+   mono text renders at full width — so headers would sit ~17% wider per glyph
+   than the figures beneath them. Pinning both to 85 gives header and body a
+   single horizontal rhythm and keeps fixed-width columns inside their tracks. */
+.num, .label {
+  font-variation-settings: 'wdth' 85;
+}
+
 .num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  font-variation-settings: 'wdth' 85;
 }
 
 .label {

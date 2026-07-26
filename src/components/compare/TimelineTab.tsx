@@ -149,7 +149,7 @@ export function TimelineTab({ reports }: Props) {
   const fmtK = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k` : Math.round(n).toLocaleString()
 
   return (
-    <div className="p-4 space-y-8" data-no-grid-click>
+    <div className="p-4 space-y-6" data-no-grid-click>
 
       {/* ── DPS over time ─────────────────────────────────────────────── */}
       <div>
@@ -181,10 +181,10 @@ export function TimelineTab({ reports }: Props) {
                   if (!active || !payload?.length) return null
                   return (
                     <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-fig shadow-lg">
-                      <p className="text-text-faint mb-1">{label}s</p>
+                      <p className="text-text-faint mb-1"><span className="num">{label}</span>s</p>
                       {payload.map((p, i) => (
                         <p key={i} style={{ color: p.color }}>
-                          {String(p.dataKey)}: {Number(p.value).toLocaleString()} DPS
+                          {String(p.dataKey)}: <span className="num">{Number(p.value).toLocaleString()}</span> DPS
                         </p>
                       ))}
                     </div>
@@ -231,7 +231,7 @@ export function TimelineTab({ reports }: Props) {
           {hasBursts && (
             <div className="flex gap-3 mt-3">
               <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Burst Windows</div>
+                <div className="label mb-0.5">Burst Windows</div>
                 <div className="text-fig font-semibold">
                   {reports.map((_, ri) => (
                     <span key={ri}>
@@ -242,7 +242,7 @@ export function TimelineTab({ reports }: Props) {
                 </div>
               </div>
               <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Avg Burst Peak</div>
+                <div className="label mb-0.5">Avg Burst Peak</div>
                 <div className="text-fig font-semibold">
                   {reports.map((_, ri) => {
                     const bursts = burstsPerBuild[ri]
@@ -259,7 +259,7 @@ export function TimelineTab({ reports }: Props) {
                 </div>
               </div>
               <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Avg Burst Duration</div>
+                <div className="label mb-0.5">Avg Burst Duration</div>
                 <div className="text-fig font-semibold">
                   {reports.map((_, ri) => {
                     const bursts = burstsPerBuild[ri]
@@ -299,7 +299,7 @@ export function TimelineTab({ reports }: Props) {
               {hasGains && (
                 <div className="flex gap-3 mb-3">
                   <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                    <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Avg Level</div>
+                    <div className="label mb-0.5">Avg Level</div>
                     <div className="text-fig font-semibold">
                       {summary.avgLevel.map((v, ri) => (
                         <span key={ri}>
@@ -310,7 +310,7 @@ export function TimelineTab({ reports }: Props) {
                     </div>
                   </div>
                   <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                    <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Total Generated</div>
+                    <div className="label mb-0.5">Total Generated</div>
                     <div className="text-fig font-semibold">
                       {summary.totalGenerated.map((v, ri) => (
                         <span key={ri}>
@@ -324,7 +324,7 @@ export function TimelineTab({ reports }: Props) {
                   </div>
                   {summary.overflow.some((v) => v > 0) && (
                     <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
-                      <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Overflow (wasted)</div>
+                      <div className="label mb-0.5">Overflow (wasted)</div>
                       <div className="text-fig font-semibold">
                         {summary.overflow.map((v, ri) => (
                           <span key={ri}>
@@ -363,10 +363,10 @@ export function TimelineTab({ reports }: Props) {
                       if (!active || !payload?.length) return null
                       return (
                         <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-fig shadow-lg">
-                          <p className="text-text-faint mb-1">{label}s</p>
+                          <p className="text-text-faint mb-1"><span className="num">{label}</span>s</p>
                           {payload.map((p, i) => (
                             <p key={i} style={{ color: p.color }}>
-                              {String(p.dataKey)}: {p.value}
+                              {String(p.dataKey)}: <span className="num">{p.value}</span>
                             </p>
                           ))}
                         </div>

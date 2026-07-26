@@ -23,7 +23,7 @@ export function StatsTab({ reports }: Props) {
   return (
     <div className="p-4 max-w-4xl mx-auto">
       {/* Secondary stats radar */}
-      <div className="mb-8">
+      <div className="mb-6">
         <h3 className="label mb-4">
           Secondary Stats — Buffed %
         </h3>
@@ -48,7 +48,7 @@ export function StatsTab({ reports }: Props) {
                     <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-fig shadow-lg">
                       {payload.map((p, i) => (
                         <p key={i} style={{ color: p.stroke }}>
-                          {String(p.dataKey)}: {Number(p.value).toFixed(2)}%
+                          {String(p.dataKey)}: <span className="num">{Number(p.value).toFixed(2)}%</span>
                         </p>
                       ))}
                     </div>
@@ -82,7 +82,7 @@ export function StatsTab({ reports }: Props) {
       {/* Only the stat grids overflow; the radar chart above does not. */}
       <div className="table-scroll" tabIndex={0} role="region" aria-label="Stat comparison">
       <Section title="Fight Conditions">
-        <StatRow label="Fight Style" values={reports.map((r) => r.fightStyle)} reports={reports} />
+        <StatRow label="Fight Style" values={reports.map((r) => r.fightStyle)} reports={reports} isText />
         <StatRow label="Targets" values={reports.map((r) => String(r.targetCount))} reports={reports} />
         <StatRow
           label="Duration"
@@ -158,12 +158,17 @@ function StatRow({
   rawValues,
   unit,
   reports,
+  isText = false,
 }: {
   label: string
   values: string[]
   rawValues?: number[]
   unit?: string
   reports: Report[]
+  /** Opt a row out of the mono treatment. Some rows carry words ("Patchwerk")
+   *  rather than compared figures, and mono makes prose harder to read without
+   *  buying any column alignment. */
+  isText?: boolean
 }) {
   const maxRaw = rawValues ? Math.max(...rawValues) : null
 
@@ -187,7 +192,7 @@ function StatRow({
         return (
           <span
             key={i}
-            className={`num px-3 py-[5px] border-r border-border last:border-0${isMax && reports.length > 1 ? ' text-positive' : ''}`}
+            className={`${isText ? '' : 'num '}px-3 py-[5px] text-right border-r border-border last:border-0${isMax && reports.length > 1 ? ' text-positive' : ''}`}
           >
             {v}
             {delta !== null && (
