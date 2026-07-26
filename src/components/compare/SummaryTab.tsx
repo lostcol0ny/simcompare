@@ -285,7 +285,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                       style={{
                         color: buildHue(i),
                         backgroundColor: buildFill(i, 0.09),
-                        border: `1px solid ${buildHue(i)}40`,
+                        border: `1px solid ${buildFill(i, 0.25)}`,
                       }}
                     >
                       {r.setBonus.pieces}pc {r.setBonus.setName}

@@ -74,7 +74,7 @@ export function AbilitiesTab({ reports }: Props) {
               width={136}
             />
             <Tooltip
-              cursor={{ fill: 'rgba(124, 58, 237, 0.08)' }}
+              cursor={{ fill: 'rgba(203, 213, 225, 0.07)' }}
               content={({ active, payload, label }) => {
                 if (!active || !payload?.length) return null
                 return (
@@ -146,7 +146,7 @@ export function AbilitiesTab({ reports }: Props) {
             />
             <ZAxis dataKey="totalDps" range={[30, 300]} name="Total DPS" />
             <Tooltip
-              cursor={{ stroke: 'rgba(124, 58, 237, 0.3)' }}
+              cursor={{ stroke: 'rgba(203, 213, 225, 0.25)' }}
               content={({ active, payload }) => {
                 if (!active || !payload?.length) return null
                 const d = payload[0].payload as { name: string; casts: number; dpsPerCast: number; totalDps: number; buildLabel: string }
@@ -313,7 +313,7 @@ function AbilityRowComponent({
                     className="ml-1 text-xs px-1 rounded"
                     style={{
                       color: buildHue(i),
-                      border: `1px solid ${buildHue(i)}33`,
+                      border: `1px solid ${buildFill(i, 0.2)}`,
                       backgroundColor: buildFill(i, 0.07),
                     }}
                   >
