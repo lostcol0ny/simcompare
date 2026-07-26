@@ -20,6 +20,7 @@ describe('build colour ramp', () => {
     const reserved = [
       'color-positive',
       'color-negative',
+      'color-warning',
       'color-accent',
       'color-accent-light',
       'color-accent-muted',
