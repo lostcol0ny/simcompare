@@ -299,7 +299,8 @@ export function SpecTreeTab({ reports }: Props) {
           <button
             onClick={() => setDiffsOnly((v) => !v)}
             aria-expanded={!diffsOnly}
-            className="label hover:text-text-secondary"
+            aria-controls="talent-loadout"
+            className="label hover:text-text-secondary!"
           >
             {diffsOnly ? 'Show full loadout' : 'Hide full loadout'}
           </button>
@@ -314,7 +315,7 @@ export function SpecTreeTab({ reports }: Props) {
         />
       )}
 
-      <div className="divide-y divide-border">
+      <div id="talent-loadout" className="divide-y divide-border">
         <SectionList title="Class" nodes={classNodes} selections={selections} labels={labels} diffsOnly={diffsOnly} />
         <SectionList title={activeHeroName ?? 'Hero'} nodes={heroNodes} selections={selections} labels={labels} diffsOnly={diffsOnly} />
         <SectionList title="Spec" nodes={specNodes} selections={selections} labels={labels} diffsOnly={diffsOnly} />
