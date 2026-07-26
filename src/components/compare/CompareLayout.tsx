@@ -11,6 +11,7 @@ import { SpecTreeTab } from './SpecTreeTab'
 import { StatsTab } from './StatsTab'
 import { TimelineTab } from './TimelineTab'
 import { BuffsTab } from './BuffsTab'
+import { TabPanel } from './TabPanel'
 import { decodeNames, encodeNames, encodeReportIds } from '@/lib/url-params'
 
 interface Props {
@@ -89,24 +90,24 @@ export function CompareLayout({ reports, onReportsChange }: Props) {
             <SummaryTab reports={namedReports} onRename={handleRename} onRemove={handleRemoveReport} />
           ) : (
             <>
-              <div className={`tab-panel ${activeTab === 'summary' ? 'tab-panel-active' : ''}`}>
+              <TabPanel id="summary" active={activeTab === 'summary'}>
                 <SummaryTab reports={namedReports} onRename={handleRename} onRemove={handleRemoveReport} />
-              </div>
-              <div className={`tab-panel ${activeTab === 'abilities' ? 'tab-panel-active' : ''}`}>
+              </TabPanel>
+              <TabPanel id="abilities" active={activeTab === 'abilities'}>
                 <AbilitiesTab reports={namedReports} />
-              </div>
-              <div className={`tab-panel ${activeTab === 'talents' ? 'tab-panel-active' : ''}`}>
+              </TabPanel>
+              <TabPanel id="talents" active={activeTab === 'talents'}>
                 <SpecTreeTab reports={namedReports} />
-              </div>
-              <div className={`tab-panel ${activeTab === 'stats' ? 'tab-panel-active' : ''}`}>
+              </TabPanel>
+              <TabPanel id="stats" active={activeTab === 'stats'}>
                 <StatsTab reports={namedReports} />
-              </div>
-              <div className={`tab-panel ${activeTab === 'timeline' ? 'tab-panel-active' : ''}`}>
+              </TabPanel>
+              <TabPanel id="timeline" active={activeTab === 'timeline'}>
                 <TimelineTab reports={namedReports} />
-              </div>
-              <div className={`tab-panel ${activeTab === 'buffs' ? 'tab-panel-active' : ''}`}>
+              </TabPanel>
+              <TabPanel id="buffs" active={activeTab === 'buffs'}>
                 <BuffsTab reports={namedReports} />
-              </div>
+              </TabPanel>
             </>
           )}
         </div>
