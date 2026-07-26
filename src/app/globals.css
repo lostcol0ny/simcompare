@@ -30,6 +30,16 @@
   --color-text-faint: #475569;
 
   --color-focus: #f8fafc;
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-martian), ui-monospace, monospace;
+
+  --text-hero: 2.375rem;   /* 38px — the delta figure, once per view */
+  --text-head: 1.25rem;    /* 20px — section headings */
+  --text-name: 0.9375rem;  /* 15px — ability and talent names */
+  --text-body: 0.8125rem;  /* 13px — prose */
+  --text-fig: 0.75rem;     /* 12px — table figures */
+  --text-label: 0.625rem;  /* 10px — eyebrows, column headers */
 }
 
 :root {
@@ -124,3 +134,16 @@ body {
   mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
 }
 .tab-scroll::-webkit-scrollbar { display: none; }
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--color-text-muted);
+}

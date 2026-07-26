@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
-import { Geist } from 'next/font/google'
+import { Archivo, Martian_Mono } from 'next/font/google'
 import { GridBackground } from '@/components/GridBackground'
 import './globals.css'
 
-const geist = Geist({ subsets: ['latin'] })
+const archivo = Archivo({ subsets: ['latin'], variable: '--font-archivo' })
+const martianMono = Martian_Mono({ subsets: ['latin'], variable: '--font-martian' })
 
 export const metadata: Metadata = {
   title: 'SimCompare',
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={geist.className}>
+      <body className={`${archivo.variable} ${martianMono.variable} font-sans`}>
         <GridBackground />
         <div className="relative" style={{ zIndex: 1 }}>
           {children}

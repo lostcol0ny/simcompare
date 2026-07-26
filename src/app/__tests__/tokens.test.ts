@@ -19,3 +19,17 @@ describe('design tokens', () => {
     expect(css).not.toMatch(/[^-]:focus(?!-)/)
   })
 })
+
+describe('type scale', () => {
+  const steps = ['hero', 'head', 'name', 'body', 'fig', 'label']
+
+  it('defines all six steps', () => {
+    for (const step of steps) {
+      expect(css).toMatch(new RegExp(`--text-${step}:`))
+    }
+  })
+
+  it('defines a tabular-figure utility', () => {
+    expect(css).toContain('font-variant-numeric: tabular-nums')
+  })
+})
