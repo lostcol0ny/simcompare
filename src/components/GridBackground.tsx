@@ -3,6 +3,8 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { buildRgb } from '@/lib/build-colors'
 
+const [GLOW_R, GLOW_G, GLOW_B] = buildRgb(0)
+
 const SPACING = 48
 const DOT_RADIUS = 1.2
 const INFLUENCE_RADIUS = 220
@@ -193,9 +195,9 @@ export function GridBackground() {
           const cdist2 = Math.sqrt(cdx2 * cdx2 + cdy2 * cdy2)
           if (cdist2 < INFLUENCE_RADIUS) {
             const ci = 1 - cdist2 / INFLUENCE_RADIUS
-            tR += 167 * ci * ci * 0.5
-            tG += 139 * ci * ci * 0.5
-            tB += 250 * ci * ci * 0.5
+            tR += GLOW_R * ci * ci * 0.5
+            tG += GLOW_G * ci * ci * 0.5
+            tB += GLOW_B * ci * ci * 0.5
             tA += ci * ci * 0.6
           }
 
@@ -253,7 +255,7 @@ export function GridBackground() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 w-full h-full pointer-events-none"
-      style={{ zIndex: 0 }}
+      style={{ zIndex: -1 }}
     />
   )
 }

@@ -41,7 +41,7 @@ export function ReportInputPage() {
 
   return (
     <main className="mx-auto max-w-xl px-4 py-16">
-      <h1 className="text-2xl font-bold text-text-primary mb-1">SimCompare</h1>
+      <h1 className="text-head font-bold text-text-primary mb-1">SimCompare</h1>
       <p className="text-text-secondary text-body mb-8">
         Compare Raidbots simulation reports side by side.
       </p>
@@ -54,7 +54,7 @@ export function ReportInputPage() {
           type="text"
           onPaste={handlePaste}
           placeholder="https://www.raidbots.com/simbot/report/…"
-          className="w-full rounded border border-border-subtle bg-surface-raised px-3 py-2 text-body text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
+          className="w-full rounded border border-border-subtle bg-surface-raised px-3 py-2 text-body text-text-primary placeholder:text-text-muted focus:border-accent"
           readOnly={false}
         />
         {reports.length >= 6 && (

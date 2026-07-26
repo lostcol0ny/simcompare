@@ -48,7 +48,7 @@ describe('table-scroll overflow rule', () => {
   beforeEach(() => {
     // Only the .table-scroll rules: the full file has @import and @theme
     // blocks that jsdom's CSS parser cannot handle.
-    const rules = css.match(/^\.table-scroll[^{]*\{[^}]*\}/gms) ?? []
+    const rules = css.match(/^\.table-scroll[^{]*\{[^}]*\}/gm) ?? []
     style = document.createElement('style')
     style.textContent = rules.join('\n')
     document.head.appendChild(style)
@@ -59,7 +59,7 @@ describe('table-scroll overflow rule', () => {
   })
 
   it('targets the real grid children, not a <table>', () => {
-    expect(css).toMatch(/\.table-scroll\s*>\s*\*\s*\{[^}]*min-width:\s*max-content/s)
+    expect(css).toMatch(/\.table-scroll\s*>\s*\*\s*\{[\s\S]*?min-width:\s*max-content/)
   })
 
   it.each([

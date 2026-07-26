@@ -60,7 +60,7 @@ export function StickyHeader({ reports }: Props) {
                   hierarchy rather than a row of equals. */}
               <span
                 className={`num font-bold text-accent-light ${
-                  i === leadIdx ? 'text-hero leading-none' : ''
+                  i === leadIdx ? 'text-head' : ''
                 }`}
               >
                 {Math.round(r.dps / 1000).toLocaleString()}k
@@ -69,7 +69,7 @@ export function StickyHeader({ reports }: Props) {
           ))}
           {delta && leader && (
             <span className="bg-positive-bg text-positive px-2 py-0.5 rounded text-fig font-bold shrink-0 border border-positive-border">
-              <span className="num">{LABELS[reports.indexOf(leader)]} +{delta}%</span>
+              <span className="num">{LABELS[leadIdx]} +{delta}%</span>
             </span>
           )}
         </div>
@@ -104,7 +104,7 @@ export function StickyHeader({ reports }: Props) {
             onPaste={handleAddPaste}
             onKeyDown={(e) => e.key === 'Escape' && setAddingReport(false)}
             placeholder="Paste a Raidbots report URL…"
-            className="w-full max-w-sm rounded border border-border-subtle bg-surface px-3 py-1.5 text-body text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent"
+            className="w-full max-w-sm rounded border border-border-subtle bg-surface px-3 py-1.5 text-body text-text-primary placeholder:text-text-muted focus:border-accent"
           />
           <span className="text-text-muted text-fig whitespace-nowrap">Esc to cancel</span>
         </div>

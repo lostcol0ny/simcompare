@@ -30,6 +30,10 @@ describe('DeltaLedger', () => {
   it('shows the unaccounted remainder rather than hiding it', () => {
     render(<DeltaLedger baseline={baseline} compared={compared} comparedIndex={1} />)
     expect(screen.getByText(/everything else/i)).toBeInTheDocument()
+    // remainder = total − Σrow_deltas = (1_246_332 − 1_284_910) − (317_110 − 341_220)
+    //           = −38_578 − (−24_110) = −14_468
+    // signed(−14_468) → '−14,468'
+    expect(screen.getByText('−14,468')).toBeInTheDocument()
   })
 })
 

@@ -1,13 +1,8 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import { readToken } from '@/test/read-token'
 
 const css = readFileSync(path.resolve(__dirname, '../globals.css'), 'utf8')
-
-export function readToken(name: string): string {
-  const match = css.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})`))
-  if (!match) throw new Error(`Token --${name} is not defined in globals.css`)
-  return match[1].toLowerCase()
-}
 
 describe('design tokens', () => {
   it('defines a focus colour', () => {

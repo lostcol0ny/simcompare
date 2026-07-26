@@ -36,7 +36,7 @@ export function buildRgb(index: number): readonly [number, number, number] {
     parseInt(hex.slice(1, 3), 16),
     parseInt(hex.slice(3, 5), 16),
     parseInt(hex.slice(5, 7), 16),
-  ] as const
+  ]
 }
 
 export function buildFill(index: number, alpha = 0.18): string {

@@ -110,7 +110,7 @@ export function BuffsTab({ reports }: Props) {
                                 {b.overflow > 0 && (
                                   <div
                                     className="h-full rounded-r-full"
-                                    style={{ width: `${100 - usedFrac}%`, backgroundColor: '#ef4444', opacity: 0.5 }}
+                                    style={{ width: `${100 - usedFrac}%`, backgroundColor: 'var(--color-negative)', opacity: 0.5 }}
                                   />
                                 )}
                               </div>

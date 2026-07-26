@@ -1,14 +1,5 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
 import { BUILD_HUES, buildHue, buildFill, buildRgb } from '../build-colors'
-
-const css = readFileSync(path.resolve(__dirname, '../../app/globals.css'), 'utf8')
-
-function readToken(name: string): string {
-  const match = css.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{3,8})`))
-  if (!match) throw new Error(`Token --${name} is not defined in globals.css`)
-  return match[1].toLowerCase()
-}
+import { readToken } from '@/test/read-token'
 
 describe('build colour ramp', () => {
   it('provides eight distinct hues', () => {

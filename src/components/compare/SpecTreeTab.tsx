@@ -288,8 +288,7 @@ export function SpecTreeTab({ reports }: Props) {
         <span className="text-text-muted">{diffCount} difference{diffCount !== 1 ? 's' : ''}</span>
       </div>
 
-      {reports.length >= 2 && (
-        <div className="flex items-center justify-between px-4 pt-4">
+      <div className="flex items-center justify-between px-4 pt-4">
           <BaselineSelector
             reports={reports}
             baselineIndex={baseIdx}
@@ -298,24 +297,20 @@ export function SpecTreeTab({ reports }: Props) {
           />
           <button
             onClick={() => setDiffsOnly((v) => !v)}
-            aria-expanded={!diffsOnly}
-            aria-controls="talent-loadout"
+            aria-pressed={!diffsOnly}
             className="label hover:text-text-secondary!"
           >
             {diffsOnly ? 'Show full loadout' : 'Hide full loadout'}
           </button>
         </div>
-      )}
 
-      {reports.length >= 2 && (
-        <DeltaLedger
-          baseline={reports[baseIdx]}
-          compared={reports[compIdx]}
-          comparedIndex={compIdx}
-        />
-      )}
+      <DeltaLedger
+        baseline={reports[baseIdx]}
+        compared={reports[compIdx]}
+        comparedIndex={compIdx}
+      />
 
-      <div id="talent-loadout" className="divide-y divide-border">
+      <div className="divide-y divide-border">
         <SectionList title="Class" nodes={classNodes} selections={selections} labels={labels} diffsOnly={diffsOnly} />
         <SectionList title={activeHeroName ?? 'Hero'} nodes={heroNodes} selections={selections} labels={labels} diffsOnly={diffsOnly} />
         <SectionList title="Spec" nodes={specNodes} selections={selections} labels={labels} diffsOnly={diffsOnly} />
