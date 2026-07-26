@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
   schedule:
     # Weekly check that the cached SimC slot map still matches upstream.
