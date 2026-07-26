@@ -8,6 +8,8 @@ import { LABELS } from '@/lib/report-labels'
 import { buildHue, buildFill } from '@/lib/build-colors'
 import { buildSlotMap, mapSelections, detectHeroTree, filterInactiveHeroNodes } from '@/lib/talent-decode'
 import { WowheadTooltipLoader, WowheadSpellLink, refreshWowheadLinks } from '@/components/WowheadTooltip'
+import { DeltaLedger } from './DeltaLedger'
+import { BaselineSelector } from './BaselineSelector'
 
 interface Props {
   reports: Report[]
@@ -176,6 +178,10 @@ export function SpecTreeTab({ reports }: Props) {
   const [treeData, setTreeData] = useState<TalentTreeData | null>(null)
   const [treeError, setTreeError] = useState<string | null>(null)
   const [diffsOnly, setDiffsOnly] = useState(true)
+  const [pair, setPair] = useState<[number, number]>([0, 1])
+  // Fall back to [0,1] if stored indices go out of range or become equal after a report is removed
+  const inRange = pair[0] < reports.length && pair[1] < reports.length && pair[0] !== pair[1]
+  const [baseIdx, compIdx] = inRange ? pair : [0, 1]
   const specs = [...new Set(reports.map((r) => r.specialization))]
   const isCrossSpec = specs.length > 1
 
@@ -279,16 +285,34 @@ export function SpecTreeTab({ reports }: Props) {
             </span>
           ))}
         </div>
-        <div className="flex items-center gap-3 text-text-muted">
-          <span>{diffCount} difference{diffCount !== 1 ? 's' : ''}</span>
+        <span className="text-text-muted">{diffCount} difference{diffCount !== 1 ? 's' : ''}</span>
+      </div>
+
+      {reports.length >= 2 && (
+        <div className="flex items-center justify-between px-4 pt-4">
+          <BaselineSelector
+            reports={reports}
+            baselineIndex={baseIdx}
+            comparedIndex={compIdx}
+            onChange={(b, c) => setPair([b, c])}
+          />
           <button
             onClick={() => setDiffsOnly((v) => !v)}
-            className="text-accent-light hover:underline"
+            aria-expanded={!diffsOnly}
+            className="label hover:text-text-secondary"
           >
-            {diffsOnly ? 'Show all' : 'Differences only'}
+            {diffsOnly ? 'Show full loadout' : 'Hide full loadout'}
           </button>
         </div>
-      </div>
+      )}
+
+      {reports.length >= 2 && (
+        <DeltaLedger
+          baseline={reports[baseIdx]}
+          compared={reports[compIdx]}
+          comparedIndex={compIdx}
+        />
+      )}
 
       <div className="divide-y divide-border">
         <SectionList title="Class" nodes={classNodes} selections={selections} labels={labels} diffsOnly={diffsOnly} />
