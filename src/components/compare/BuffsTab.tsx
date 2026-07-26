@@ -27,14 +27,14 @@ export function BuffsTab({ reports }: Props) {
     <div className="p-4 space-y-8">
       {/* Buff uptime comparison bars */}
       <div>
-        <p className="text-xs text-text-faint uppercase tracking-wide mb-3">Buff Uptime</p>
+        <p className="label mb-3">Buff Uptime</p>
         <div className="border border-border rounded-lg overflow-hidden">
           {allBuffNames.map((name) => (
             <div
               key={name}
-              className="border-b border-border last:border-0 px-3 py-2 bg-surface row-hover"
+              className="border-b border-hairline last:border-0 px-3 py-[5px] bg-surface row-hover"
             >
-              <span className="text-text-secondary text-xs">{name}</span>
+              <span className="text-text-secondary text-name">{name}</span>
               <div className="mt-1 space-y-1">
                 {reports.map((r, i) => {
                   const buff = r.buffs.find((b) => b.name === name)
@@ -48,7 +48,7 @@ export function BuffsTab({ reports }: Props) {
                           style={{ width: `${uptime}%`, backgroundColor: buildHue(i), opacity: 0.75 }}
                         />
                       </div>
-                      <span className="text-[11px] text-text-secondary w-12 text-right shrink-0">
+                      <span className="num text-fig text-text-secondary w-12 text-right shrink-0">
                         {uptime > 0 ? `${uptime.toFixed(1)}%` : '—'}
                       </span>
                     </div>
@@ -80,20 +80,20 @@ export function BuffsTab({ reports }: Props) {
         if (resourceData.length === 0) return null
         return (
           <div>
-            <p className="text-xs text-text-faint uppercase tracking-wide mb-3">Resource Efficiency</p>
+            <p className="label mb-3">Resource Efficiency</p>
             <div className="border border-border rounded-lg overflow-hidden">
               {resourceData.map(({ resource, label, perBuild }) => {
                 const maxTotal = Math.max(...perBuild.map((b) => b.total))
                 return (
-                  <div key={resource} className="border-b border-border last:border-0 px-3 py-2 bg-surface row-hover">
-                    <span className="text-text-secondary text-xs">{label}</span>
+                  <div key={resource} className="border-b border-hairline last:border-0 px-3 py-[5px] bg-surface row-hover">
+                    <span className="text-text-secondary text-name">{label}</span>
                     <div className="mt-1 space-y-1">
                       {reports.map((r, i) => {
                         const b = perBuild[i]
                         if (b.total === 0) return (
                           <div key={i} className="flex items-center gap-2">
                             <span className="text-[10px] w-3 shrink-0" style={{ color: buildHue(i) }}>{LABELS[i]}</span>
-                            <span className="text-[11px] text-text-faint">—</span>
+                            <span className="text-fig text-text-faint">—</span>
                           </div>
                         )
                         const barW = maxTotal > 0 ? (b.total / maxTotal) * 100 : 0
@@ -115,10 +115,10 @@ export function BuffsTab({ reports }: Props) {
                                 )}
                               </div>
                             </div>
-                            <span className="text-[11px] text-text-secondary w-24 text-right shrink-0">
+                            <span className="num text-fig text-text-secondary w-24 text-right shrink-0">
                               {b.actual.toFixed(1)}
                               {b.overflow > 0 && (
-                                <span className="text-negative"> ({b.wastePct.toFixed(0)}% waste)</span>
+                                <span className="text-negative"> (<span className="num">{b.wastePct.toFixed(0)}%</span> waste)</span>
                               )}
                             </span>
                           </div>
@@ -135,7 +135,7 @@ export function BuffsTab({ reports }: Props) {
 
       {/* Resource gains detail */}
       <div>
-        <p className="text-xs text-text-faint uppercase tracking-wide mb-3">Resource Gains by Source</p>
+        <p className="label mb-3">Resource Gains by Source</p>
         {/* Only this grid overflows; the uptime/efficiency bars above are
             flex-1 and always fit. No overflow-hidden — it would become the
             sticky containing block and stop .pin-col from pinning. */}
@@ -147,7 +147,7 @@ export function BuffsTab({ reports }: Props) {
         >
           {/* Header */}
           <div
-            className="grid bg-surface border-b border-border text-xs text-text-faint px-3 py-1.5"
+            className="grid bg-surface border-b border-hairline label px-3 py-[5px]"
             style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr)` }}
           >
             <span className="pin-col">Source · Resource</span>
@@ -163,22 +163,22 @@ export function BuffsTab({ reports }: Props) {
             return (
               <div
                 key={key}
-                className="grid items-start border-b border-border last:border-0 px-3 py-2 bg-surface row-hover"
+                className="grid items-start border-b border-hairline last:border-0 px-3 py-[5px] bg-surface row-hover"
                 style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr)` }}
               >
-                <span className="pin-col text-text-secondary text-xs truncate pr-2 pt-0.5">{label}</span>
+                <span className="pin-col text-text-secondary text-fig truncate pr-2 pt-0.5">{label}</span>
                 {reports.map((r, i) => {
                   const gain = r.gains.find((g) => g.source === source && g.resource === resource)
                   if (!gain) return (
-                    <span key={i} className="text-right text-text-faint text-xs">—</span>
+                    <span key={i} className="text-right text-text-faint text-fig">—</span>
                   )
                   return (
                     <div key={i} className="text-right">
-                      <span className="text-xs text-text-primary font-medium">
+                      <span className="num text-fig text-text-primary font-medium">
                         {gain.actual.toFixed(1)}
                       </span>
                       {gain.overflow > 0 && (
-                        <span className="text-xs text-negative ml-1">
+                        <span className="num text-fig text-negative ml-1">
                           ({gain.overflow.toFixed(1)} wasted)
                         </span>
                       )}

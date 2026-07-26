@@ -111,10 +111,10 @@ function SectionList({ title, nodes, selections, labels, diffsOnly }: SectionPro
     if (!diffsOnly) return null
     return (
       <div>
-        <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-text-faint bg-surface/50 border-b border-border">
+        <div className="px-3 py-1.5 label font-semibold bg-surface/50 border-b border-hairline">
           {title}
         </div>
-        <div className="px-4 py-3 text-xs text-text-faint italic text-center">
+        <div className="px-4 py-3 text-fig text-text-faint italic text-center">
           No differences in {title.toLowerCase()} talents
         </div>
       </div>
@@ -123,12 +123,12 @@ function SectionList({ title, nodes, selections, labels, diffsOnly }: SectionPro
 
   return (
     <div>
-      <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-text-faint bg-surface/50 border-b border-border">
+      <div className="px-3 py-1.5 label font-semibold bg-surface/50 border-b border-hairline">
         {title}
       </div>
-      <table className="text-xs border-collapse mx-auto">
+      <table className="text-fig border-collapse mx-auto">
         <thead>
-          <tr className="border-b border-border">
+          <tr className="border-b border-hairline">
             <th className="px-3 py-1.5 text-left font-normal text-text-faint">Talent</th>
             {labels.map((l, i) => (
               <th
@@ -143,9 +143,9 @@ function SectionList({ title, nodes, selections, labels, diffsOnly }: SectionPro
         </thead>
         <tbody>
           {filteredRows.map((row) => (
-            <tr key={row.key} className="border-b border-border/30">
+            <tr key={row.key} className="border-b border-hairline/30">
               <td className="px-3 py-1.5">
-                <span className="inline-flex items-center gap-2 text-text-primary">
+                <span className="inline-flex items-center gap-2 text-name text-text-primary">
                   {row.iconUrl && (
                     <img src={row.iconUrl} alt="" className="w-[22px] h-[22px] rounded flex-shrink-0" />
                   )}
@@ -244,17 +244,17 @@ export function SpecTreeTab({ reports }: Props) {
   }, [reports, isCrossSpec])
 
   if (isCrossSpec) return (
-    <div className="p-4 text-text-muted text-sm">
+    <div className="p-4 text-text-muted text-body">
       Cross-spec comparison — talent tree requires the same specialization.
     </div>
   )
 
   if (treeError) return (
-    <div className="p-4 text-negative text-sm">Failed to load talent tree: {treeError}</div>
+    <div className="p-4 text-negative text-body">Failed to load talent tree: {treeError}</div>
   )
 
   if (!treeData) return (
-    <div className="p-4 text-text-muted text-sm">Loading talent tree…</div>
+    <div className="p-4 text-text-muted text-body">Loading talent tree…</div>
   )
 
   const labels = LABELS.slice(0, reports.length)
@@ -264,7 +264,7 @@ export function SpecTreeTab({ reports }: Props) {
       <WowheadTooltipLoader />
 
       {/* Controls bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-surface-raised/80 backdrop-blur border-b border-border text-xs flex-wrap gap-2">
+      <div className="flex items-center justify-between px-4 py-2 bg-surface-raised/80 backdrop-blur border-b border-border text-fig flex-wrap gap-2">
         <div className="flex items-center gap-3">
           {labels.map((l, i) => (
             <span key={l} className="inline-flex items-center gap-1.5">

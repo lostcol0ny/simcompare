@@ -7,6 +7,7 @@
 
   --color-border: #1e1e2e;
   --color-border-subtle: #2d2d3d;
+  --color-border-hairline: #16162a;
 
   --color-accent: #cbd5e1;
   --color-accent-light: #f1f5f9;
@@ -138,6 +139,7 @@ body {
 .num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+  font-variation-settings: 'wdth' 85;
 }
 
 .label {

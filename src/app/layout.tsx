@@ -4,7 +4,7 @@ import { GridBackground } from '@/components/GridBackground'
 import './globals.css'
 
 const archivo = Archivo({ subsets: ['latin'], variable: '--font-archivo' })
-const martianMono = Martian_Mono({ subsets: ['latin'], variable: '--font-martian' })
+const martianMono = Martian_Mono({ subsets: ['latin'], variable: '--font-martian', axes: ['wdth'] })
 
 export const metadata: Metadata = {
   title: 'SimCompare',

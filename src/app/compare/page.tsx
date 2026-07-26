@@ -51,7 +51,7 @@ function ComparePageInner() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-text-muted text-sm">Loading reports…</p>
+        <p className="text-text-muted text-body">Loading reports…</p>
       </div>
     )
   }
@@ -59,7 +59,7 @@ function ComparePageInner() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-negative text-sm">{error}</p>
+        <p className="text-negative text-body">{error}</p>
       </div>
     )
   }
@@ -72,7 +72,7 @@ export default function ComparePage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <p className="text-text-muted text-sm">Loading reports…</p>
+          <p className="text-text-muted text-body">Loading reports…</p>
         </div>
       }
     >

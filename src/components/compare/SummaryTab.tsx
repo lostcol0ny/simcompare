@@ -214,7 +214,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                 </div>
 
                 <div className="min-w-0">
-                  <p className="text-xs text-text-faint uppercase tracking-wide">
+                  <p className="label">
                     <span
                       className="inline-block w-4 h-4 rounded-full mr-1 align-middle"
                       style={{ backgroundColor: buildHue(i) }}
@@ -235,7 +235,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                         if (e.key === 'Enter') { onRename(i, editValue.trim()); setEditingIndex(null) }
                         if (e.key === 'Escape') setEditingIndex(null)
                       }}
-                      className="font-semibold text-sm w-full rounded border border-accent bg-surface px-1 focus:outline-none"
+                      className="font-semibold text-name w-full rounded border border-accent bg-surface px-1 focus:outline-none"
                       style={{ color: classColor }}
                     />
                   ) : (
@@ -244,44 +244,44 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                       className="group flex items-center gap-1 text-left"
                       title="Click to rename"
                     >
-                      <span className="font-semibold text-sm truncate" style={{ color: classColor }}>
+                      <span className="font-semibold text-name truncate" style={{ color: classColor }}>
                         {r.characterName}
                       </span>
-                      <span className="text-text-faint opacity-0 group-hover:opacity-100 text-xs transition-opacity">✎</span>
+                      <span className="text-text-faint opacity-0 group-hover:opacity-100 text-fig transition-opacity">✎</span>
                     </button>
                   )}
-                  <p className="text-xs text-text-muted truncate">
+                  <p className="text-fig text-text-muted truncate">
                     {heroName ? `${heroName} ${r.specialization}` : r.specialization}
                   </p>
-                  <p className="text-xs text-text-faint truncate">{formatRace(r.race)}</p>
+                  <p className="text-fig text-text-faint truncate">{formatRace(r.race)}</p>
                 </div>
               </div>
 
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-accent-light">
+                <span className="text-hero num font-bold text-accent-light">
                   {(r.dps / 1000).toFixed(1)}k
                 </span>
                 {isLeader && reports.length > 1 && (
-                  <span className="text-xs bg-positive-bg text-positive px-1.5 py-0.5 rounded border border-positive-border font-bold">
-                    +{delta}%
+                  <span className="text-fig bg-positive-bg text-positive px-1.5 py-0.5 rounded border border-positive-border font-bold">
+                    <span className="num">+{delta}%</span>
                   </span>
                 )}
               </div>
-              <p className="text-xs text-text-muted mt-0.5">DPS ±{fmt(r.dpsStdDev)}</p>
+              <p className="text-fig text-text-muted mt-0.5">DPS ±<span className="num">{fmt(r.dpsStdDev)}</span></p>
 
               <button
                 onClick={() => copyTalents(i, r.talentString)}
-                className="mt-2 text-xs px-2 py-0.5 rounded border border-border text-text-muted hover:text-accent-light hover:border-accent transition-colors"
+                className="mt-2 text-fig px-2 py-0.5 rounded border border-border text-text-muted hover:text-accent-light hover:border-accent transition-colors"
               >
                 {copiedIdx === i ? '✓ Copied' : 'Copy talents'}
               </button>
 
-              <div className="mt-3 space-y-0.5 text-xs text-text-secondary">
+              <div className="mt-3 space-y-0.5 text-fig text-text-secondary">
                 <p>{r.fightStyle} · {r.targetCount} {r.targetCount === 1 ? 'target' : 'targets'} · {r.fightDuration}s ±{Math.round(r.varyLength * 100)}%</p>
                 {r.setBonus && (
-                  <p className="text-xs mt-0.5">
+                  <p className="text-fig mt-0.5">
                     <span
-                      className="px-1.5 py-0.5 rounded text-xs font-medium"
+                      className="px-1.5 py-0.5 rounded text-fig font-medium"
                       style={{
                         color: buildHue(i),
                         backgroundColor: buildFill(i, 0.09),
@@ -307,7 +307,7 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
         const maxPdf = Math.max(...reports.map((r) => normalPDF(r.dps, r.dps, r.dpsRawStdDev)))
         return (
           <div className="px-4 pt-6 pb-4 border-b border-border">
-            <p className="text-xs text-text-faint uppercase tracking-wide mb-4">DPS Distribution</p>
+            <p className="label mb-4">DPS Distribution</p>
             <div className="bg-surface-raised border border-border rounded-lg p-4">
               <svg viewBox={`0 0 ${DIST_W} ${DIST_H + 20}`} className="w-full" style={{ maxHeight: 220 }}>
                 {reports.map((r, i) => (
@@ -344,13 +344,13 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
               <div className="flex gap-3 mt-3 justify-center">
                 <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
                   <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Overlap</div>
-                  <div className="text-sm">
+                  <div className="text-fig">
                     {reports.map((r, i) => {
                       if (i === leaderIdx) return null
                       const prob = overlapProbability(reports[leaderIdx].dps, reports[leaderIdx].dpsRawStdDev, r.dps, r.dpsRawStdDev)
                       return (
                         <div key={i} className="font-semibold" style={{ color: buildHue(i) }}>
-                          {(prob * 100).toFixed(1)}% <span className="text-[9px] text-text-faint font-normal">chance {LABELS[i]} beats {LABELS[leaderIdx]}</span>
+                          <span className="num">{(prob * 100).toFixed(1)}%</span> <span className="text-[9px] text-text-faint font-normal">chance {LABELS[i]} beats {LABELS[leaderIdx]}</span>
                         </div>
                       )
                     })}
@@ -358,22 +358,22 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
                 </div>
                 <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
                   <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">DPS Range (95% CI)</div>
-                  <div className="text-[13px] font-medium space-y-0.5">
+                  <div className="text-fig font-medium space-y-0.5">
                     {reports.map((r, i) => (
                       <div key={i} style={{ color: buildHue(i) }}>
-                        {LABELS[i]}: {fmtK(r.dps - 1.96 * r.dpsRawStdDev)} – {fmtK(r.dps + 1.96 * r.dpsRawStdDev)}
+                        {LABELS[i]}: <span className="num">{fmtK(r.dps - 1.96 * r.dpsRawStdDev)} – {fmtK(r.dps + 1.96 * r.dpsRawStdDev)}</span>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
                   <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Consistency</div>
-                  <div className="text-[13px] font-medium space-y-0.5">
+                  <div className="text-fig font-medium space-y-0.5">
                     {reports.map((r, i) => {
                       const cvPct = r.dps > 0 ? (r.dpsRawStdDev / r.dps) * 100 : 0
                       return (
                         <div key={i} style={{ color: buildHue(i) }}>
-                          {LABELS[i]}: ±{fmtK(r.dpsRawStdDev)} <span className="text-[9px] text-text-faint">({cvPct.toFixed(1)}%)</span>
+                          {LABELS[i]}: <span className="num">±{fmtK(r.dpsRawStdDev)}</span> <span className="text-[9px] text-text-faint">(<span className="num">{cvPct.toFixed(1)}%</span>)</span>
                         </div>
                       )
                     })}
@@ -389,10 +389,10 @@ export function SummaryTab({ reports, onRename, onRemove }: Props) {
       <div className="flex divide-x divide-border">
         {reports.map((r, i) => (
           <div key={r.id} className="flex-1 p-4">
-            <p className="text-xs text-text-faint uppercase tracking-wide mb-2">
+            <p className="label mb-2">
               {LABELS[i]} Stats
             </p>
-            <div className="space-y-1 text-xs">
+            <div className="space-y-1 text-fig">
               <StatBar label="Haste" value={r.buffedStats.spellHaste} color={buildHue(i)} />
               <StatBar label="Crit" value={r.buffedStats.spellCrit} color={buildHue(i)} />
               <StatBar label="Mastery" value={r.buffedStats.mastery} color={buildHue(i)} />
@@ -412,14 +412,14 @@ function StatBar({ label, value, color }: { label: string; value: number; color:
   const pct = Math.min(Math.max(value, 0), 100)
   return (
     <div className="flex items-center gap-2 rounded px-1 -mx-1 py-0.5 row-hover">
-      <span className="text-text-faint w-14 shrink-0">{label}</span>
+      <span className="text-fig text-text-faint w-14 shrink-0">{label}</span>
       <div className="flex-1 h-1.5 bg-surface-overlay rounded-full overflow-hidden">
         <div
           className="h-full rounded-full"
           style={{ width: `${pct}%`, backgroundColor: color, opacity: 0.7 }}
         />
       </div>
-      <span className="text-text-secondary w-12 text-right shrink-0">{value.toFixed(1)}%</span>
+      <span className="num text-fig text-text-secondary w-12 text-right shrink-0">{value.toFixed(1)}%</span>
     </div>
   )
 }

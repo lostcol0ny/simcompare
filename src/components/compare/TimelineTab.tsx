@@ -153,7 +153,7 @@ export function TimelineTab({ reports }: Props) {
 
       {/* ── DPS over time ─────────────────────────────────────────────── */}
       <div>
-        <p className="text-xs text-text-faint uppercase tracking-wide mb-4">
+        <p className="label mb-4">
           DPS Over Time ({WINDOW}s rolling average)
         </p>
         <div className="bg-surface-raised border border-border rounded-lg p-4">
@@ -180,7 +180,7 @@ export function TimelineTab({ reports }: Props) {
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null
                   return (
-                    <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
+                    <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-fig shadow-lg">
                       <p className="text-text-faint mb-1">{label}s</p>
                       {payload.map((p, i) => (
                         <p key={i} style={{ color: p.color }}>
@@ -232,27 +232,27 @@ export function TimelineTab({ reports }: Props) {
             <div className="flex gap-3 mt-3">
               <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
                 <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Burst Windows</div>
-                <div className="text-sm font-semibold">
+                <div className="text-fig font-semibold">
                   {reports.map((_, ri) => (
                     <span key={ri}>
-                      {ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}
-                      <span style={{ color: buildHue(ri) }}>{LABELS[ri]}: {burstsPerBuild[ri].length}</span>
+                      {ri > 0 && <span className="text-text-faint text-fig font-normal"> · </span>}
+                      <span style={{ color: buildHue(ri) }}>{LABELS[ri]}: <span className="num">{burstsPerBuild[ri].length}</span></span>
                     </span>
                   ))}
                 </div>
               </div>
               <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
                 <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Avg Burst Peak</div>
-                <div className="text-sm font-semibold">
+                <div className="text-fig font-semibold">
                   {reports.map((_, ri) => {
                     const bursts = burstsPerBuild[ri]
-                    if (bursts.length === 0) return <span key={ri}>{ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}<span style={{ color: buildHue(ri) }}>{LABELS[ri]}: —</span></span>
+                    if (bursts.length === 0) return <span key={ri}>{ri > 0 && <span className="text-text-faint text-fig font-normal"> · </span>}<span style={{ color: buildHue(ri) }}>{LABELS[ri]}: —</span></span>
                     const avgPeak = bursts.reduce((s, b) => s + b.peak, 0) / bursts.length
                     const pctAbove = ((avgPeak - baselines[ri]) / baselines[ri]) * 100
                     return (
                       <span key={ri}>
-                        {ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}
-                        <span style={{ color: buildHue(ri) }}>{LABELS[ri]}: {fmtK(avgPeak)} <span className="text-[9px] text-text-faint">(+{pctAbove.toFixed(0)}%)</span></span>
+                        {ri > 0 && <span className="text-text-faint text-fig font-normal"> · </span>}
+                        <span style={{ color: buildHue(ri) }}>{LABELS[ri]}: <span className="num">{fmtK(avgPeak)}</span> <span className="text-[9px] text-text-faint">(<span className="num">+{pctAbove.toFixed(0)}%</span>)</span></span>
                       </span>
                     )
                   })}
@@ -260,15 +260,15 @@ export function TimelineTab({ reports }: Props) {
               </div>
               <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
                 <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Avg Burst Duration</div>
-                <div className="text-sm font-semibold">
+                <div className="text-fig font-semibold">
                   {reports.map((_, ri) => {
                     const bursts = burstsPerBuild[ri]
-                    if (bursts.length === 0) return <span key={ri}>{ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}<span style={{ color: buildHue(ri) }}>{LABELS[ri]}: —</span></span>
+                    if (bursts.length === 0) return <span key={ri}>{ri > 0 && <span className="text-text-faint text-fig font-normal"> · </span>}<span style={{ color: buildHue(ri) }}>{LABELS[ri]}: —</span></span>
                     const avgDur = bursts.reduce((s, b) => s + (b.end - b.start), 0) / bursts.length
                     return (
                       <span key={ri}>
-                        {ri > 0 && <span className="text-text-faint text-xs font-normal"> · </span>}
-                        <span style={{ color: buildHue(ri) }}>{LABELS[ri]}: ~{Math.round(avgDur)}s</span>
+                        {ri > 0 && <span className="text-text-faint text-fig font-normal"> · </span>}
+                        <span style={{ color: buildHue(ri) }}>{LABELS[ri]}: ~<span className="num">{Math.round(avgDur)}s</span></span>
                       </span>
                     )
                   })}
@@ -291,7 +291,7 @@ export function TimelineTab({ reports }: Props) {
 
         return (
           <div key={resource}>
-            <p className="text-xs text-text-faint uppercase tracking-wide mb-4">
+            <p className="label mb-4">
               {formatResourceName(resource)} Over Time
             </p>
             <div className="bg-surface-raised border border-border rounded-lg p-4">
@@ -300,22 +300,22 @@ export function TimelineTab({ reports }: Props) {
                 <div className="flex gap-3 mb-3">
                   <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
                     <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Avg Level</div>
-                    <div className="text-sm font-semibold">
+                    <div className="text-fig font-semibold">
                       {summary.avgLevel.map((v, ri) => (
                         <span key={ri}>
-                          {ri > 0 && <span className="text-text-faint text-xs font-normal"> / </span>}
-                          <span style={{ color: buildHue(ri) }}>{v}</span>
+                          {ri > 0 && <span className="text-text-faint text-fig font-normal"> / </span>}
+                          <span className="num" style={{ color: buildHue(ri) }}>{v}</span>
                         </span>
                       ))}
                     </div>
                   </div>
                   <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
                     <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Total Generated</div>
-                    <div className="text-sm font-semibold">
+                    <div className="text-fig font-semibold">
                       {summary.totalGenerated.map((v, ri) => (
                         <span key={ri}>
-                          {ri > 0 && <span className="text-text-faint text-xs font-normal"> / </span>}
-                          <span style={{ color: buildHue(ri) }}>
+                          {ri > 0 && <span className="text-text-faint text-fig font-normal"> / </span>}
+                          <span className="num" style={{ color: buildHue(ri) }}>
                             {Math.round(v * 10) / 10}
                           </span>
                         </span>
@@ -325,11 +325,11 @@ export function TimelineTab({ reports }: Props) {
                   {summary.overflow.some((v) => v > 0) && (
                     <div className="bg-[rgba(13,13,26,0.6)] border border-border rounded-md px-3 py-2">
                       <div className="text-[9px] text-text-faint uppercase tracking-wider mb-0.5">Overflow (wasted)</div>
-                      <div className="text-sm font-semibold">
+                      <div className="text-fig font-semibold">
                         {summary.overflow.map((v, ri) => (
                           <span key={ri}>
-                            {ri > 0 && <span className="text-text-faint text-xs font-normal"> / </span>}
-                            <span style={{ color: buildHue(ri) }}>
+                            {ri > 0 && <span className="text-text-faint text-fig font-normal"> / </span>}
+                            <span className="num" style={{ color: buildHue(ri) }}>
                               {Math.round(v * 10) / 10}
                             </span>
                           </span>
@@ -362,7 +362,7 @@ export function TimelineTab({ reports }: Props) {
                     content={({ active, payload, label }) => {
                       if (!active || !payload?.length) return null
                       return (
-                        <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
+                        <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-fig shadow-lg">
                           <p className="text-text-faint mb-1">{label}s</p>
                           {payload.map((p, i) => (
                             <p key={i} style={{ color: p.color }}>

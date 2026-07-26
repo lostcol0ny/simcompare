@@ -46,7 +46,7 @@ export function AbilitiesTab({ reports }: Props) {
           plot, since the height formula would collapse to 40px. */}
       {topRows.length > 0 && (
       <div className="px-4 pt-5 pb-4 border-b border-border">
-        <p className="text-xs text-text-faint uppercase tracking-wide mb-4">
+        <p className="label mb-4">
           Top Abilities — DPS Contribution
         </p>
         <ResponsiveContainer width="100%" height={topRows.length * 36 + 40}>
@@ -78,7 +78,7 @@ export function AbilitiesTab({ reports }: Props) {
               content={({ active, payload, label }) => {
                 if (!active || !payload?.length) return null
                 return (
-                  <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
+                  <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-fig shadow-lg">
                     <p className="font-bold text-text-primary mb-1">{label}</p>
                     {payload.map((p, i) => (
                       <p key={i} style={{ color: p.fill }}>
@@ -114,7 +114,7 @@ export function AbilitiesTab({ reports }: Props) {
 
       {/* Cast efficiency scatter */}
       <div className="px-4 pt-5 pb-4 border-b border-border">
-        <p className="text-xs text-text-faint uppercase tracking-wide mb-4">
+        <p className="label mb-4">
           Cast Efficiency — DPS per Cast vs Casts per Fight
         </p>
         <ResponsiveContainer width="100%" height={260}>
@@ -151,7 +151,7 @@ export function AbilitiesTab({ reports }: Props) {
                 if (!active || !payload?.length) return null
                 const d = payload[0].payload as { name: string; casts: number; dpsPerCast: number; totalDps: number; buildLabel: string }
                 return (
-                  <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
+                  <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-fig shadow-lg">
                     <p className="font-bold text-text-primary">{d.name}</p>
                     <p className="text-text-muted">{d.buildLabel}</p>
                     <p className="text-text-secondary">{d.casts.toFixed(1)} casts/fight</p>
@@ -194,12 +194,12 @@ export function AbilitiesTab({ reports }: Props) {
 
       <div className="table-scroll" tabIndex={0} role="region" aria-label="Ability breakdown">
         {/* Table header */}
-        <div className="px-4 py-2 bg-surface-raised border-b border-border text-xs text-text-muted">
+        <div className="px-4 py-2 bg-surface-raised border-b border-border text-fig text-text-muted">
           Sorted by DPS · <span className="text-accent-light">highest first</span>
         </div>
 
         <div
-          className="grid px-4 py-1.5 bg-surface border-b border-border text-xs text-text-faint uppercase tracking-wide"
+          className="grid px-4 py-[5px] bg-surface border-b border-hairline label"
           style={{ gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 60px 70px 80px` }}
         >
           <span className="pin-col">Ability</span>
@@ -210,7 +210,7 @@ export function AbilitiesTab({ reports }: Props) {
           ))}
           <span className="text-right">CV%</span>
           <span className="text-right">DPS/Cast</span>
-          <span className="text-center">Δ vs best</span>
+          <span className="text-right">Δ vs best</span>
         </div>
 
         {rows.map((row) => (
@@ -249,24 +249,22 @@ function AbilityRowComponent({
   return (
     <>
       <div
-        className={`grid items-center border-b border-border text-sm row-hover ${
+        className={`grid items-center border-b border-hairline text-fig row-hover ${
           isChild
             ? 'bg-surface opacity-80'
-            : depth % 2 === 0
-            ? 'bg-surface'
-            : 'bg-surface-raised'
+            : 'bg-surface'
         }`}
         style={{
           gridTemplateColumns: `200px repeat(${reports.length}, 1fr) 60px 70px 80px`,
-          paddingTop: '6px',
-          paddingBottom: '6px',
+          paddingTop: '5px',
+          paddingBottom: '5px',
           paddingLeft: `${16 + depth * 16}px`,
           paddingRight: '16px',
         }}
       >
         <div className="pin-col flex items-center gap-1 min-w-0">
           {isChild && (
-            <span className="text-text-faint mr-0.5 text-xs shrink-0">└</span>
+            <span className="text-text-faint mr-0.5 text-fig shrink-0">└</span>
           )}
 
           {/* Expand/collapse arrow for rows with children */}
@@ -292,12 +290,12 @@ function AbilityRowComponent({
           )}
 
           <div className="min-w-0">
-            <span className={isChild ? 'text-xs text-text-secondary' : 'font-medium text-text-primary'}>
+            <span className={isChild ? 'text-fig text-text-secondary' : 'text-name font-medium text-text-primary'}>
               {row.spellName}
             </span>
             {!isChild && (row.values[0]?.castsPerFight ?? 0) > 0 && (
-              <div className="text-xs text-text-faint">
-                {row.school} · {row.values[0].castsPerFight.toFixed(1)}×/fight
+              <div className="text-fig text-text-faint">
+                {row.school} · <span className="num">{row.values[0].castsPerFight.toFixed(1)}</span>×/fight
               </div>
             )}
           </div>
@@ -307,10 +305,10 @@ function AbilityRowComponent({
           <div key={i} className="text-right">
             {v.dps > 0 ? (
               <>
-                <span className="font-medium text-text-primary">{Math.round(v.dps).toLocaleString()}</span>
+                <span className="num font-medium text-text-primary">{Math.round(v.dps).toLocaleString()}</span>
                 {v.exclusive && (
                   <span
-                    className="ml-1 text-xs px-1 rounded"
+                    className="ml-1 text-fig px-1 rounded"
                     style={{
                       color: buildHue(i),
                       border: `1px solid ${buildFill(i, 0.2)}`,
@@ -328,7 +326,7 @@ function AbilityRowComponent({
         ))}
 
         {/* CV% — coefficient of variation across builds */}
-        <div className="text-right text-xs">
+        <div className="text-right text-fig">
           {(() => {
             const present = row.values.filter((v) => v.dps > 0)
             if (present.length === 0) return <span className="text-text-faint">—</span>
@@ -337,21 +335,21 @@ function AbilityRowComponent({
             const avgCv = cvs.reduce((s, c) => s + c, 0) / cvs.length
             if (avgCv === 0) return <span className="text-text-faint">—</span>
             const color = avgCv > 20 ? 'text-negative' : avgCv > 10 ? 'text-warning' : 'text-text-secondary'
-            return <span className={color}>{avgCv.toFixed(1)}%</span>
+            return <span className={`num ${color}`}>{avgCv.toFixed(1)}%</span>
           })()}
         </div>
 
         {/* DPS per cast */}
-        <div className="text-right text-xs">
+        <div className="text-right text-fig">
           {(() => {
             const present = row.values.filter((v) => v.dps > 0 && v.castsPerFight > 0)
             if (present.length === 0) return <span className="text-text-faint">—</span>
             const avgDpsPerCast = present.reduce((s, v) => s + v.dps / v.castsPerFight, 0) / present.length
-            return <span className="text-text-secondary">{avgDpsPerCast >= 1000 ? `${(avgDpsPerCast / 1000).toFixed(1)}k` : Math.round(avgDpsPerCast).toLocaleString()}</span>
+            return <span className="num text-text-secondary">{avgDpsPerCast >= 1000 ? `${(avgDpsPerCast / 1000).toFixed(1)}k` : Math.round(avgDpsPerCast).toLocaleString()}</span>
           })()}
         </div>
 
-        <div className="text-center text-xs">
+        <div className="text-right text-fig">
           {maxDps > 0 && row.values.filter((v) => v.dps > 0).length > 1 ? (
             row.values.map((v, i) => {
               if (v.dps === 0) return null
@@ -359,7 +357,7 @@ function AbilityRowComponent({
               if (pct === 0) return null
               const color = pct < -2 ? 'text-negative' : 'text-text-muted'
               return (
-                <span key={i} className={`block ${color}`}>
+                <span key={i} className={`block num ${color}`}>
                   {LABELS[i]}: {pct.toFixed(1)}%
                 </span>
               )

@@ -55,7 +55,7 @@ export function TabNav({ active, onChange }: Props) {
           aria-controls={`panel-${tab.id}`}
           tabIndex={active === tab.id ? 0 : -1}
           onClick={() => onChange(tab.id)}
-          className={`px-4 py-2.5 text-sm font-medium transition-colors shrink-0 ${
+          className={`px-4 py-2.5 text-body font-medium transition-colors shrink-0 ${
             active === tab.id
               ? 'text-accent-light border-b-2 border-accent'
               : 'text-text-muted hover:text-text-secondary'

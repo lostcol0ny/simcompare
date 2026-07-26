@@ -79,7 +79,7 @@ export function CompareLayout({ reports, onReportsChange }: Props) {
       {reports.length >= 2 && <TabNav active={activeTab} onChange={setActiveTab} />}
       {reports.length === 1 && (
         <div className="text-center py-4 bg-surface-raised border-b border-border-subtle">
-          <p className="text-text-muted text-sm">
+          <p className="text-text-muted text-body">
             Use <span className="text-accent-light font-medium">+ Add report</span> above to add another report for comparison.
           </p>
         </div>

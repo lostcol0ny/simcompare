@@ -24,7 +24,7 @@ export function StatsTab({ reports }: Props) {
     <div className="p-4 max-w-4xl mx-auto">
       {/* Secondary stats radar */}
       <div className="mb-8">
-        <h3 className="text-xs text-text-faint uppercase tracking-wide mb-4">
+        <h3 className="label mb-4">
           Secondary Stats — Buffed %
         </h3>
         <div className="bg-surface-raised border border-border rounded-lg p-4">
@@ -45,7 +45,7 @@ export function StatsTab({ reports }: Props) {
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null
                   return (
-                    <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-xs shadow-lg">
+                    <div className="bg-surface-overlay border border-border rounded-lg px-3 py-2 text-fig shadow-lg">
                       {payload.map((p, i) => (
                         <p key={i} style={{ color: p.stroke }}>
                           {String(p.dataKey)}: {Number(p.value).toFixed(2)}%
@@ -144,7 +144,7 @@ export function StatsTab({ reports }: Props) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-6">
-      <h3 className="text-xs text-text-faint uppercase tracking-wide mb-2">{title}</h3>
+      <h3 className="label mb-2">{title}</h3>
       {/* No overflow-hidden: it would become the sticky containing block and
           stop .pin-col from pinning against the .table-scroll ancestor. */}
       <div className="border border-border rounded-lg">{children}</div>
@@ -171,10 +171,10 @@ function StatRow({
     <div
       /* bg-surface is required, not decorative: .pin-col below inherits its
          background from this row, and this grid was previously transparent. */
-      className="grid border-b border-border last:border-0 text-sm row-hover bg-surface"
+      className="grid border-b border-hairline last:border-0 text-fig row-hover bg-surface"
       style={{ gridTemplateColumns: `160px repeat(${reports.length}, 1fr)` }}
     >
-      <span className="pin-col px-3 py-2 text-xs text-text-faint border-r border-border">
+      <span className="pin-col px-3 py-[5px] text-fig text-text-faint border-r border-border">
         {label}
       </span>
       {values.map((v, i) => {
@@ -187,11 +187,11 @@ function StatRow({
         return (
           <span
             key={i}
-            className={`px-3 py-2 border-r border-border last:border-0${isMax && reports.length > 1 ? ' text-positive' : ''}`}
+            className={`num px-3 py-[5px] border-r border-border last:border-0${isMax && reports.length > 1 ? ' text-positive' : ''}`}
           >
             {v}
             {delta !== null && (
-              <span className="ml-1 text-xs text-negative">
+              <span className="ml-1 text-fig num text-negative">
                 {delta > 0 ? '+' : ''}
                 {unit === '%' ? `${delta.toFixed(1)}%` : delta.toLocaleString()}
               </span>
