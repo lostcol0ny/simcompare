@@ -43,13 +43,21 @@ describe('TabNav', () => {
     expect(onChange).toHaveBeenCalledWith('summary')
   })
 
+  it('selects the previous tab on ArrowLeft, wrapping at the start', () => {
+    const onChange = vi.fn()
+    render(<TabNav active="summary" onChange={onChange} />)
+    screen.getByRole('tab', { name: 'Summary' }).focus()
+    press('ArrowLeft')
+    expect(onChange).toHaveBeenCalledWith('buffs')
+  })
+
   it('jumps to the first and last tab on Home and End', () => {
     const onChange = vi.fn()
     render(<TabNav active="stats" onChange={onChange} />)
     screen.getByRole('tab', { name: 'Stats' }).focus()
     press('Home')
-    expect(onChange).toHaveBeenCalledWith('summary')
+    expect(onChange).toHaveBeenLastCalledWith('summary')
     press('End')
-    expect(onChange).toHaveBeenCalledWith('buffs')
+    expect(onChange).toHaveBeenLastCalledWith('buffs')
   })
 })
